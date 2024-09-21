@@ -14,3 +14,5 @@ pub mod custom;
 pub mod authenticator;
 /// Module for the functions that handle encryption/encoding and decryption/decoding.
 pub mod secure;
+/// Module for utility functions.
+pub mod util;

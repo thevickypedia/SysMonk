@@ -1,31 +1,19 @@
-use regex::Regex;
 use reqwest;
 use serde::{Deserialize, Serialize};
-use std::net::{SocketAddr, UdpSocket};
+use std::net::UdpSocket;
+use crate::squire;
 
-// Define the IP regex pattern
-fn ip_regex() -> Regex {
-    Regex::new(
-        r"^(?:(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])\.){3}(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])$"
-    ).unwrap()
-}
-
-// Synchronous function to retrieve the public IP address
+/// Function to retrieve the public IP address
+///
+/// # Returns
+///
+/// An `Option` containing the public IP address as a `String` if found, otherwise `None`
 async fn public_ip_address() -> Option<String> {
-    let ip_regex = ip_regex();
-
-    // Mapping URLs to their expected response types
-    let mapping: Vec<(&str, bool)> = vec![
-        ("https://checkip.amazonaws.com/", true), // expects text
-        ("https://api.ipify.org/", true),         // expects text
-        ("https://ipinfo.io/ip/", true),          // expects text
-        ("https://v4.ident.me/", true),           // expects text
-        ("https://httpbin.org/ip", false),        // expects JSON
-        ("https://myip.dnsomatic.com/", true),    // expects text
-    ];
+    let ip_regex = squire::util::ip_regex();
+    let mapping = squire::util::public_ip_mapping();
 
     for (url, expects_text) in mapping {
-        match reqwest::get(url).await {
+        match reqwest::get(&url).await {
             Ok(response) => {
                 let extracted_ip = if expects_text {
                     response.text().await.unwrap_or_default().trim().to_string()
@@ -39,8 +27,8 @@ async fn public_ip_address() -> Option<String> {
                     return Some(extracted_ip);
                 }
             }
-            Err(e) => {
-                eprintln!("Failed to fetch from {}: {}", url, e);
+            Err(err) => {
+                log::error!("Failed to fetch from {}: {}", &url, err);
                 continue; // Move on to the next URL
             }
         }
@@ -49,21 +37,54 @@ async fn public_ip_address() -> Option<String> {
     None
 }
 
-// Function to retrieve the private IP address
+/// Function to retrieve the private IP address
+///
+/// # Returns
+///
+/// An `Option` containing the private IP address as a `String` if found, otherwise `None`
 fn private_ip_address() -> Option<String> {
-    let socket = UdpSocket::bind("0.0.0.0:0").ok()?;
-    socket.connect("8.8.8.8:80").ok()?;
-    let local_addr: SocketAddr = socket.local_addr().ok()?;
+    let socket = match UdpSocket::bind("0.0.0.0:0") {
+        Ok(s) => s,
+        Err(err) => {
+            log::error!("Failed to bind to a socket: {}", err);
+            return None;
+        }
+    };
+    if socket.connect("8.8.8.8:80").is_err() {
+        log::error!("Failed to connect to a socket");
+        return None;
+    }
+    let local_addr = match socket.local_addr() {
+        Ok(addr) => addr,
+        Err(err) => {
+            log::error!("Failed to get local IP address: {}", err);
+            return None;
+        }
+    };
     Some(local_addr.ip().to_string())
 }
 
+/// Struct to hold the network information of the system
+///
+/// This struct holds the private and public IP addresses of the system.
+///
+/// # Fields
+///
+/// * `private_ip_address` - The private IP address of the system
+/// * `public_ip_address` - The public IP address of the system
 #[derive(Serialize, Deserialize, Debug)]
 pub struct SystemInfoNetwork {
     private_ip_address: String,
     public_ip_address: String,
 }
 
-
+/// Function to get network information
+///
+/// This function retrieves the private and public IP addresses of the system.
+///
+/// # Returns
+///
+/// A `SystemInfoNetwork` struct containing the private and public IP addresses.
 pub async fn get_network_info() -> SystemInfoNetwork {
     let private_ip = private_ip_address().unwrap_or_default();
     let public_ip = public_ip_address().await.unwrap_or_default();

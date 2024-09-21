@@ -2,8 +2,7 @@
 ///
 /// # See Also
 ///
-/// - This page is served as a response for all the entry points,
-/// when the user tries to access a page without valid authentication.
+/// This page is served as a response, when the user tries to access a page without valid authentication.
 ///
 /// # Returns
 ///

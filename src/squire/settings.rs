@@ -52,8 +52,8 @@ pub fn default_host() -> String {
 /// Returns the default port (8000)
 pub fn default_port() -> u16 { 8000 }
 
-/// Returns the default session duration (3600 seconds)
-pub fn default_session_duration() -> i64 { 3600 }
+/// Returns the default session duration (900 seconds)
+pub fn default_session_duration() -> i64 { 900 }
 
 /// Returns the default number of worker threads (half of logical cores)
 pub fn default_workers() -> usize {
