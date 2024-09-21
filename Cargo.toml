@@ -1,0 +1,49 @@
+[package]
+name = "SysMonk"
+version = "0.0.0-alpha"
+description = "Sytem Monitor is a Rust based CLI tool to monitor system resources."
+license = "MIT"
+documentation = "https://docs.rs/SysMonk"
+homepage = "https://github.com/thevickypedia/SysMonk"
+repository = "https://github.com/thevickypedia/SysMonk"
+rust-version = "1.81.0"
+keywords = ["asynchronous-server", "SysMonk", "cli-tool", "system-resources"]
+categories = ["web-programming::http-server", "asynchronous", "algorithms", "authentication"]
+include = ["/src", "LICENSE"]
+exclude = [".github", ".gitignore", "README.md"]
+edition = "2021"
+authors = ["Vignesh Rao"]
+
+[lib]
+name = "sysmonk"
+path = "src/lib.rs"
+
+[[bin]]
+name = "sysmonk"
+path = "src/main.rs"
+
+[package.metadata.docs.rs]
+rustdoc-args = ["--document-private-items"]
+
+[dependencies]
+actix-rt = "2.10.0"
+actix-web = { version = "4.9.0", features = ["openssl"] }
+actix-files = "0.6.6"
+actix-cors = "0.7.0"
+actix-multipart = "0.7.2"
+serde = { version = "1.0.210", features = ["derive"] }
+serde_json = "1.0.128"
+chrono = { version = "0.4.38", features = ["serde"] }
+env_logger = "0.11.5"
+log = "0.4.22"
+base64 = "0.22.1"
+sha2 = "0.10.8"
+rand = "0.8.5"
+minijinja = { version =  "2.3.1", features = ["loader"] }
+url = "2.5.2"
+regex = "1.10.6"
+openssl = "0.10.64"
+dotenv = "0.15.0"
+futures-util = "0.3.30"
+[target.'cfg(target_os = "linux")'.dependencies]
+openssl = { version = "0.10.64", features = ["vendored"] }
