@@ -21,7 +21,7 @@ pub async fn health() -> HttpResponse {
 /// # Arguments
 ///
 /// * `request` - A reference to the Actix web `HttpRequest` object.
-/// * `session` - Session struct that holds the `session_mapping` and `session_tracker` to handle sessions.
+/// * `session` - Session struct that holds the `session_mapping` to handle sessions.
 /// * `metadata` - Struct containing metadata of the application.
 /// * `template` - Configuration container for the loaded templates.
 ///

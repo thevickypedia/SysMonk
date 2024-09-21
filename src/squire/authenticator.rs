@@ -74,7 +74,7 @@ fn extract_credentials(authorization: &HeaderValue) -> Result<Credentials, &'sta
 ///
 /// * `request` - A reference to the Actix web `HttpRequest` object.
 /// * `config` - Configuration data for the application.
-/// * `session` - Session struct that holds the `session_mapping` and `session_tracker` to handle sessions.
+/// * `session` - Session struct that holds the `session_mapping` to handle sessions.
 ///
 /// # Returns
 ///
@@ -128,7 +128,7 @@ pub fn verify_login(
 /// * `request` - A reference to the Actix web `HttpRequest` object.
 /// * `config` - Configuration data for the application.
 /// * `fernet` - Fernet object to encrypt the auth payload that will be set as `session_token` cookie.
-/// * `session` - Session struct that holds the `session_mapping` and `session_tracker` to handle sessions.
+/// * `session` - Session struct that holds the `session_mapping` to handle sessions.
 ///
 /// # Returns
 ///

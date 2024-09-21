@@ -29,7 +29,7 @@ pub struct DetailError {
 /// * `request` - A reference to the Actix web `HttpRequest` object.
 /// * `config` - Configuration data for the application.
 /// * `fernet` - Fernet object to encrypt the auth payload that will be set as `session_token` cookie.
-/// * `session` - Session struct that holds the `session_mapping` and `session_tracker` to handle sessions.
+/// * `session` - Session struct that holds the `session_mapping` to handle sessions.
 ///
 /// # Returns
 ///
@@ -78,7 +78,7 @@ pub async fn login(request: HttpRequest,
 ///
 /// * `request` - A reference to the Actix web `HttpRequest` object.
 /// * `fernet` - Fernet object to encrypt the auth payload that will be set as `session_token` cookie.
-/// * `session` - Session struct that holds the `session_mapping` and `session_tracker` to handle sessions.
+/// * `session` - Session struct that holds the `session_mapping` to handle sessions.
 /// * `metadata` - Struct containing metadata of the application.
 /// * `config` - Configuration data for the application.
 /// * `template` - Configuration container for the loaded templates.
@@ -107,12 +107,6 @@ pub async fn logout(request: HttpRequest,
     }
 
     if auth_response.ok {
-        let mut tracker = session.tracker.lock().unwrap();
-        if tracker.get(&host).is_some() {
-            tracker.remove(&host);
-        } else {
-            log::warn!("Session information for {} was not stored or no file was rendered", host);
-        }
         rendered = logout_template.render(minijinja::context!(
             version => metadata.pkg_version,
             detail => "You have been logged out successfully."

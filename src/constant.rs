@@ -49,19 +49,17 @@ pub fn build_info() -> Arc<MetaData> {
 ///
 /// ## Fields
 ///
-/// * `tracker` - Used to log connection and streaming information without redundancy.
 /// * `mapping` - Used to store username and session token's payload as key value pairs.
 ///
 /// ## See Also:
 ///
 /// These fields are updated and used only for authenticated sessions.
 pub struct Session {
-    pub tracker: Mutex<HashMap<String, String>>,
     pub mapping: Mutex<HashMap<String, String>>,
 }
 
 
-/// Instantiates the `Session` struct with empty `HashMap` for both `tracker` and `mapping` fields.
+/// Instantiates the `Session` struct with empty `HashMap` for `mapping` fields.
 ///
 /// ## See Also
 ///
@@ -72,7 +70,6 @@ pub struct Session {
 /// Returns the constructed `Arc` for the `Session` struct.
 pub fn session_info() -> Arc<Session> {
     Arc::new(Session {
-        tracker: Mutex::new(HashMap::new()),
         mapping: Mutex::new(HashMap::new()),
     })
 }
