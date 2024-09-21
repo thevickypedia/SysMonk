@@ -10,3 +10,7 @@ pub mod middleware;
 pub mod parser;
 /// Module for custom functions that logs connection information and builds custom error responses.
 pub mod custom;
+/// Module that handles the authentication and
+pub mod authenticator;
+/// Module for the functions that handle encryption/encoding and decryption/decoding.
+pub mod secure;

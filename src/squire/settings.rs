@@ -17,7 +17,6 @@ pub struct Config {
     /// Port number for hosting the application.
     pub port: u16,
     /// Duration of a session in seconds.
-    #[allow(dead_code)]
     pub session_duration: i64,
 
     /// Number of worker threads to spin up the server.

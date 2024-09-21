@@ -47,6 +47,8 @@ pub async fn start() -> io::Result<()> {
     log::info!("{} [workers:{}] running on http://{} (Press CTRL+C to quit)",
         &metadata.pkg_name, &config.workers, &host);
     let jinja = templates::environment();
+    let fernet = constant::fernet_object();
+    let session = constant::session_info();
     /*
         || syntax is creating a closure that serves as the argument to the HttpServer::new() method.
         The closure is defining the configuration for the Actix web server.
@@ -56,11 +58,14 @@ pub async fn start() -> io::Result<()> {
         App::new()  // Creates a new Actix web application
             .app_data(web::Data::new(config_clone.clone()))
             .app_data(web::Data::new(jinja.clone()))
+            .app_data(web::Data::new(fernet.clone()))
+            .app_data(web::Data::new(session.clone()))
             .app_data(web::Data::new(metadata.clone()))
             .wrap(squire::middleware::get_cors(config_clone.websites.clone()))
             .wrap(middleware::Logger::default())  // Adds a default logger middleware to the application
             .service(routes::basics::health)  // Registers a service for handling requests
             .service(routes::basics::root)
+            .service(routes::auth::login)
     };
     let server = HttpServer::new(application)
         .workers(config.workers)
