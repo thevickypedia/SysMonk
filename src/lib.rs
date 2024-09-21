@@ -15,6 +15,7 @@ mod routes;
 /// Module to store all the helper functions.
 mod squire;
 mod templates;
+mod system_info;
 
 /// Contains entrypoint and initializer settings to trigger the asynchronous `HTTPServer`
 ///
@@ -65,7 +66,11 @@ pub async fn start() -> io::Result<()> {
             .wrap(middleware::Logger::default())  // Adds a default logger middleware to the application
             .service(routes::basics::health)  // Registers a service for handling requests
             .service(routes::basics::root)
+            .service(routes::basics::health)  // Registers a service for handling requests
             .service(routes::auth::login)
+            .service(routes::monitor::monitor)
+            .service(routes::auth::logout)
+            .service(routes::auth::error)
     };
     let server = HttpServer::new(application)
         .workers(config.workers)

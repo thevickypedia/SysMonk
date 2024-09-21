@@ -211,24 +211,24 @@ pub fn get_content() -> String {
     <details>
         <summary><strong>System Information (Basic)</strong></summary>
         <br>
-        {% for key, value in sys_info_basic.items() %}
-        <strong>{{ key|capwords }}: </strong>{{ value }}<br>
+        {% for key, value in sys_info_basic|items() %}
+        <strong>{{ key }}: </strong>{{ value }}<br>
         {% endfor %}
     </details>
     <br>
     <details>
         <summary><strong>System Information (Memory & Storage)</strong></summary>
         <br>
-        {% for key, value in sys_info_mem_storage.items() %}
-        <strong>{{ key|capwords }}: </strong>{{ value }}<br>
+        {% for key, value in sys_info_mem_storage|items() %}
+        <strong>{{ key }}: </strong>{{ value }}<br>
         {% endfor %}
     </details>
     <br>
     <details>
         <summary><strong>System Information (Network)</strong></summary>
         <br>
-        {% for key, value in sys_info_network.items() %}
-        <strong>{{ key|capwords }}: </strong>{{ value }}<br>
+        {% for key, value in sys_info_network|items() %}
+        <strong>{{ key }}: </strong>{{ value }}<br>
         {% endfor %}
     </details>
     {% if sys_info_disks %}
@@ -237,7 +237,7 @@ pub fn get_content() -> String {
         <summary><strong>System Information (Disks)</strong></summary>
         {% for disk_info in sys_info_disks %}
         <br>
-        {% for key, value in disk_info.items() %}
+        {% for key, value in disk_info|items() %}
         <strong>{{ key }}: </strong>{{ value }}<br>
         {% endfor %}
         {% endfor %}
@@ -272,7 +272,7 @@ pub fn get_content() -> String {
         </div>
         <p id="memoryUsageText">Memory: 0%</p>
 
-        {% if 'swap' in sys_info_mem_storage.keys() %}
+        {% if 'swap' in sys_info_mem_storage %}
         <h3>Swap Usage</h3>
         <div class="progress">
             <div id="swapUsage" class="progress-bar"></div>
@@ -298,7 +298,7 @@ pub fn get_content() -> String {
         <div class="chart-container">
             <canvas id="memoryChart"></canvas>
         </div>
-        {% if 'swap' in sys_info_mem_storage.keys() %}
+        {% if 'swap' in sys_info_mem_storage %}
         <h3>Swap Usage</h3>
         <h5 id="swapTotal"></h5>
         <div class="chart-container">

@@ -8,8 +8,10 @@ mod logout;
 mod session;
 /// Monitor page template that is served as HTML response for the monitor endpoint.
 mod monitor;
-/// Monitor page template that is served as HTML response when the user is unauthorized.
+/// Unauthorized template that is served as HTML response when the user is unauthorized.
 mod unauthorized;
+/// Error page template that is served as HTML response for any error message to be conveyed.
+mod error;
 
 /// Error page template that is served as HTML response for any error message to be conveyed.
 
@@ -24,6 +26,7 @@ pub fn environment() -> Arc<minijinja::Environment<'static>> {
     env.add_template_owned("index", index::get_content()).unwrap();
     env.add_template_owned("monitor", monitor::get_content()).unwrap();
     env.add_template_owned("logout", logout::get_content()).unwrap();
+    env.add_template_owned("error", error::get_content()).unwrap();
     env.add_template_owned("session", session::get_content()).unwrap();
     env.add_template_owned("unauthorized", unauthorized::get_content()).unwrap();
     Arc::new(env)
