@@ -12,7 +12,7 @@ pub struct Config {
     pub debug: bool,
     /// Boolean flag to enable UTC timezone in logging. Defaults to local timezone.
     pub utc_logging: bool,
-    /// Host IP address for media streaming.
+    /// Host IP address for the API.
     pub host: String,
     /// Port number for hosting the application.
     pub port: u16,
@@ -34,8 +34,8 @@ pub fn default_debug() -> bool { false }
 /// Returns the default value for UTC logging.
 pub fn default_utc_logging() -> bool { true }
 
-/// Returns the default media host based on the local machine's IP address.
-pub fn default_media_host() -> String {
+/// Returns the default host based on the local machine's IP address.
+pub fn default_host() -> String {
     let hostname = "localhost";
     match (hostname, 0).to_socket_addrs() {
         Ok(mut addrs) => {
@@ -50,8 +50,8 @@ pub fn default_media_host() -> String {
     "localhost".to_string()
 }
 
-/// Returns the default media port (8000)
-pub fn default_media_port() -> u16 { 8000 }
+/// Returns the default port (8000)
+pub fn default_port() -> u16 { 8000 }
 
 /// Returns the default session duration (3600 seconds)
 pub fn default_session_duration() -> i64 { 3600 }

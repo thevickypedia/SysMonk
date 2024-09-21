@@ -19,7 +19,7 @@ pub fn init_logger(debug: bool, utc: bool, crate_name: &String) {
         ));
         std::env::set_var("RUST_BACKTRACE", "1");
     } else {
-        // Set Actix logging to warning mode since it becomes too noisy when streaming large files
+        // Set Actix logging to warning mode since it becomes too noisy when streaming
         std::env::set_var("RUST_LOG", format!(
             "actix_web=warn,actix_server=warn,{}=info", crate_name
         ));
@@ -54,22 +54,28 @@ pub fn init_logger(debug: bool, utc: bool, crate_name: &String) {
 ///
 /// If the value is missing or if there is an error parsing the `HashMap`
 fn mandatory_vars() -> (String, String) {
+    let mut errors = "".to_owned();
     let username = match std::env::var("username") {
         Ok(val) => val,
         Err(_) => {
-            panic!(
+            errors.push_str(
                 "\nusername\n\texpected a string, received null [value=missing]\n",
             );
+            "".to_string()
         }
     };
     let password = match std::env::var("password") {
         Ok(val) => val,
         Err(_) => {
-            panic!(
+            errors.push_str(
                 "\npassword\n\texpected a string, received null [value=missing]\n",
             );
+            "".to_string()
         }
     };
+    if !errors.is_empty() {
+        panic!("{}", errors);
+    }
     (username, password)
 }
 
@@ -207,8 +213,8 @@ fn load_env_vars() -> settings::Config {
     let (username, password) = mandatory_vars();
     let debug = parse_bool("debug").unwrap_or(settings::default_debug());
     let utc_logging = parse_bool("utc_logging").unwrap_or(settings::default_utc_logging());
-    let host = std::env::var("media_host").unwrap_or(settings::default_media_host());
-    let port = parse_u16("media_port").unwrap_or(settings::default_media_port());
+    let host = std::env::var("host").unwrap_or(settings::default_host());
+    let port = parse_u16("port").unwrap_or(settings::default_port());
     let session_duration = parse_i64("session_duration").unwrap_or(settings::default_session_duration());
     let workers = parse_usize("workers").unwrap_or(settings::default_workers());
     let max_connections = parse_usize("max_connections").unwrap_or(settings::default_max_connections());
@@ -236,18 +242,18 @@ fn validate_vars() -> settings::Config {
     let config = load_env_vars();
     let mut errors = "".to_owned();
     if config.username.len() < 4 {
-        let err2 = format!(
+        let err1 = format!(
             "\nusername\n\t[{}] username should be at least 4 or more characters [value=invalid]\n",
             config.username
         );
-        errors.push_str(&err2);
+        errors.push_str(&err1);
     }
     if config.password.len() < 8 {
-        let err3 = format!(
+        let err2 = format!(
             "\npassword\n\t[{}] password should be at least 8 or more characters [value=invalid]\n",
             "*".repeat(config.password.len())
         );
-        errors.push_str(&err3);
+        errors.push_str(&err2);
     }
     if !errors.is_empty() {
         panic!("{}", errors);

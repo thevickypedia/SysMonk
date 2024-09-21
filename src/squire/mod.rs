@@ -8,3 +8,5 @@ pub mod ascii_art;
 pub mod middleware;
 /// Module that handles parsing command line arguments.
 pub mod parser;
+/// Module for custom functions that logs connection information and builds custom error responses.
+pub mod custom;
