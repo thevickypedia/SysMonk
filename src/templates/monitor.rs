@@ -212,7 +212,7 @@ pub fn get_content() -> String {
         <summary><strong>System Information (Basic)</strong></summary>
         <br>
         {% for key, value in sys_info_basic|items() %}
-        <strong>{{ key }}: </strong>{{ value }}<br>
+        <strong>{{ key|capwords }}: </strong>{{ value }}<br>
         {% endfor %}
     </details>
     <br>
@@ -220,7 +220,7 @@ pub fn get_content() -> String {
         <summary><strong>System Information (Memory & Storage)</strong></summary>
         <br>
         {% for key, value in sys_info_mem_storage|items() %}
-        <strong>{{ key }}: </strong>{{ value }}<br>
+        <strong>{{ key|capwords }}: </strong>{{ value }}<br>
         {% endfor %}
     </details>
     <br>
@@ -228,7 +228,7 @@ pub fn get_content() -> String {
         <summary><strong>System Information (Network)</strong></summary>
         <br>
         {% for key, value in sys_info_network|items() %}
-        <strong>{{ key }}: </strong>{{ value }}<br>
+        <strong>{{ key|capwords }}: </strong>{{ value }}<br>
         {% endfor %}
     </details>
     {% if sys_info_disks %}

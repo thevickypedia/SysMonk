@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use reqwest;
 use serde::{Deserialize, Serialize};
 use std::net::UdpSocket;
@@ -74,22 +75,18 @@ fn private_ip_address() -> Option<String> {
 /// * `public_ip_address` - The public IP address of the system
 #[derive(Serialize, Deserialize, Debug)]
 pub struct SystemInfoNetwork {
-    private_ip_address: String,
-    public_ip_address: String,
+    private_ip_address_raw: String,
+    public_ip_address_raw: String,
 }
 
 /// Function to get network information
 ///
 /// This function retrieves the private and public IP addresses of the system.
-///
-/// # Returns
-///
-/// A `SystemInfoNetwork` struct containing the private and public IP addresses.
-pub async fn get_network_info() -> SystemInfoNetwork {
+pub async fn get_network_info() -> HashMap<&'static str, String> {
     let private_ip = private_ip_address().unwrap_or_default();
     let public_ip = public_ip_address().await.unwrap_or_default();
-    SystemInfoNetwork {
-        private_ip_address: private_ip,
-        public_ip_address: public_ip,
-    }
+    HashMap::from([
+        ("Private_IP_Address_raw", private_ip),
+        ("Public_IP_Address_raw", public_ip),
+    ])
 }

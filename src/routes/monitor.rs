@@ -1,4 +1,5 @@
-use crate::{constant, routes, squire, system_info};
+use std::collections::HashMap;
+use crate::{constant, routes, squire, resources};
 use actix_web::cookie::{Cookie, SameSite};
 use actix_web::http::StatusCode;
 use actix_web::{web, HttpRequest, HttpResponse};
@@ -36,19 +37,26 @@ pub async fn monitor(request: HttpRequest,
     }
     log::debug!("Session Validation Response: {}", auth_response.detail);
 
-    let (sys_info_basic_struct, sys_info_mem_storage_struct) = system_info::sys_info::get_sys_info();
-    let sys_info_network_struct = system_info::network::get_network_info().await;
+    let sys_info_map = resources::info::get_sys_info();
+    let sys_info_disks_vec = resources::disks::get_all_disks();
 
-    let sys_info_basic = serde_json::to_value(&sys_info_basic_struct).unwrap();
-    let sys_info_mem_storage = serde_json::to_value(&sys_info_mem_storage_struct).unwrap();
-    let sys_info_network = serde_json::to_value(&sys_info_network_struct).unwrap();
+    let sys_info_network = resources::network::get_network_info().await;
 
+    let mut sys_info_basic: HashMap<&str, String> = sys_info_map.get("basic").unwrap().clone();
+    let sys_info_mem_storage = sys_info_map.get("mem_storage").unwrap();
+
+    let sys_info_disks = sys_info_disks_vec;
+
+    if let Some(processor_name) = resources::processor::get_name() {
+        sys_info_basic.insert("processor", processor_name);
+    }
     let rendered = monitor_template.render(minijinja::context!(
         version => metadata.pkg_version,
         logout => "/logout",
         sys_info_basic => sys_info_basic,
         sys_info_mem_storage => sys_info_mem_storage,
         sys_info_network => sys_info_network,
+        sys_info_disks => sys_info_disks
     )).unwrap();
 
     let mut cookie = Cookie::new("session_token", "");

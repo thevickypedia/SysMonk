@@ -1,4 +1,6 @@
 use std::sync::Arc;
+use minijinja::{value::Value};
+use inflector::cases::titlecase::to_title_case;
 
 /// Index page template that is served as HTML response for the root endpoint.
 mod index;
@@ -23,6 +25,7 @@ mod error;
 /// It is also the container for all loaded templates.
 pub fn environment() -> Arc<minijinja::Environment<'static>> {
     let mut env = minijinja::Environment::new();
+    env.add_filter("capwords", capwords_filter);
     env.add_template_owned("index", index::get_content()).unwrap();
     env.add_template_owned("monitor", monitor::get_content()).unwrap();
     env.add_template_owned("logout", logout::get_content()).unwrap();
@@ -30,4 +33,20 @@ pub fn environment() -> Arc<minijinja::Environment<'static>> {
     env.add_template_owned("session", session::get_content()).unwrap();
     env.add_template_owned("unauthorized", unauthorized::get_content()).unwrap();
     Arc::new(env)
+}
+
+// Custom filter function
+fn capwords_filter(value: Value) -> Result<Value, minijinja::Error> {
+    if let Some(val) = value.as_str() {
+        if val.ends_with("_raw") {
+            let parts: Vec<&str> = val.split('_').collect();
+            let result = parts[..parts.len() - 1].join(" ");
+            Ok(Value::from(result))
+        } else {
+            let result = val.replace("_", " ");
+            Ok(Value::from(to_title_case(&result)))
+        }
+    } else {
+        panic!("capwords filter only works with strings");
+    }
 }

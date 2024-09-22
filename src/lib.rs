@@ -15,7 +15,7 @@ mod routes;
 /// Module to store all the helper functions.
 mod squire;
 mod templates;
-mod system_info;
+mod resources;
 
 /// Contains entrypoint and initializer settings to trigger the asynchronous `HTTPServer`
 ///
@@ -78,4 +78,11 @@ pub async fn start() -> io::Result<()> {
     server.bind(host)?
         .run()
         .await
+    // match server.bind(host) {
+    //     Ok(bound_server) => bound_server.run().await,
+    //     Err(err) => {
+    //         log::error!("Failed to bind server: {}", err);
+    //         Err(err)
+    //     }
+    // }
 }
