@@ -251,20 +251,8 @@ pub fn get_content() -> String {
         <div class="cpu-box" id="cpuUsageContainer">
             <!-- CPU Usage will be dynamically added here -->
         </div>
-        <br>
-        <h3>Set CPU Interval (seconds)</h3>
-        <label for="cpuInterval"></label><input type="number" id="cpuInterval" min="1"
-                                                value="{{ default_cpu_interval }}">
-        <button class="tooltip-button" title="Used to compare CPU times elapsed before and after interval"
-                id="setCPUIntervalBtn">Update
-        </button>
-        <h3>Set Refresh Interval (seconds)</h3>
-        <label for="refreshInterval"></label><input type="number" id="refreshInterval" min="1"
-                                                    value="{{ default_refresh_interval }}">
-        <button class="tooltip-button" title="Frequency to query system resources" id="setRefreshIntervalBtn">Update
-        </button>
     </div>
-    <!-- Box to display Memory, Swap and Disk usage along with CPU load avg -->
+    <!-- Box to display Memory and Swap usage along with CPU load avg -->
     <div class="box">
         <h3>Memory Usage</h3>
         <div class="progress">
@@ -280,18 +268,12 @@ pub fn get_content() -> String {
         <p id="swapUsageText">Swap: 0%</p>
         {% endif %}
 
-        <h3>Disk Usage</h3>
-        <div class="progress">
-            <div id="diskUsage" class="progress-bar"></div>
-        </div>
-        <p id="diskUsageText">Disk: 0%</p>
-
         <div class="graph">
             <h3>CPU Load Averages</h3>
             <canvas class="graph-canvas" id="loadChart" width="400" height="200"></canvas>
         </div>
     </div>
-    <!-- Box to display Memory, Swap and Disk usage as Pie charts -->
+    <!-- Box to display Memory and Swap usage as Pie charts -->
     <div class="box">
         <h3>Memory Usage</h3>
         <h5 id="memoryTotal"></h5>
@@ -305,11 +287,6 @@ pub fn get_content() -> String {
             <canvas id="swapChart"></canvas>
         </div>
         {% endif %}
-        <h3>Disk Usage</h3>
-        <h5 id="diskTotal"></h5>
-        <div class="chart-container">
-            <canvas id="diskChart"></canvas>
-        </div>
     </div>
 </div>
 <div id="docker-stats" class="docker-stats">
@@ -337,9 +314,18 @@ pub fn get_content() -> String {
         const wsHost = window.location.host;
         const ws = new WebSocket(`${wsProtocol}://${wsHost}/ws/system`);
 
+        ws.onopen = () => {
+            console.log('WebSocket connection established');
+        };
+        ws.onclose = () => {
+            console.log('WebSocket connection closed');
+            alert('WebSocket connection closed. Please login again.');
+            logOut();
+            return;
+        };
+
         let memoryChartInstance = null;
         let swapChartInstance = null;
-        let diskChartInstance = null;
         let loadChartInstance = null;
 
         ws.onmessage = function (event) {
@@ -418,19 +404,12 @@ pub fn get_content() -> String {
 
             // Swap Usage Progress Bar
             const swapInfo = data.swap_info;
-            if (swapInfo.used && swapInfo.total) {
+            if (swapInfo) {
                 const swapUsage = (swapInfo.used / swapInfo.total) * 100;
                 document.getElementById('swapUsage').style.width = swapUsage.toFixed(2) + '%';
                 document.getElementById('swapUsageText').innerText = `Swap: ${swapUsage.toFixed(2)}%`;
                 updateProgressBar('swapUsage', swapUsage);
             }
-
-            // Disk Usage Progress Bar
-            const diskInfo = data.disk_info;
-            const diskUsage = (diskInfo.used / diskInfo.total) * 100;
-            document.getElementById('diskUsage').style.width = diskUsage.toFixed(2) + '%';
-            document.getElementById('diskUsageText').innerText = `Disk: ${diskUsage.toFixed(2)}%`;
-            updateProgressBar('diskUsage', diskUsage);
 
             // CPU Load Avg Graph
             const loadAverages = data.load_averages;
@@ -559,50 +538,7 @@ pub fn get_content() -> String {
                 }
             }
 
-            // Disk Chart
-            document.getElementById("diskTotal").innerText = `Total: ${formatBytes(diskInfo.total)}`;
-            if (diskChartInstance) {
-                diskChartInstance.data.datasets[0].data = [diskInfo.used, diskInfo.total - diskInfo.used];
-                diskChartInstance.update();
-            } else {
-                const diskChart = document.getElementById('diskChart').getContext('2d');
-                diskChartInstance = new Chart(diskChart, {
-                    type: 'pie',
-                    data: {
-                        labels: ['Used', 'Free'],
-                        datasets: [{
-                            label: 'Disk Usage',
-                            data: [diskInfo.used, diskInfo.total - diskInfo.used],
-                            backgroundColor: ['#63950d', '#ca7b00']
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        plugins: {
-                            tooltip: {
-                                callbacks: {
-                                    label: function (tooltipItem) {
-                                        const value = tooltipItem.raw;
-                                        const formattedValue = formatBytes(value);
-                                        return `${tooltipItem.label}: ${formattedValue}`;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
-            }
-
         };
-
-        document.getElementById('setCPUIntervalBtn').addEventListener('click', () => {
-            const cpuInterval = document.getElementById('cpuInterval').value;
-            ws.send(`cpu_interval:${cpuInterval}`);
-        });
-        document.getElementById('setRefreshIntervalBtn').addEventListener('click', () => {
-            const refreshInterval = document.getElementById('refreshInterval').value;
-            ws.send(`refresh_interval:${refreshInterval}`);
-        });
 
         function updateProgressBar(id, percentage) {
             const bar = document.getElementById(id);

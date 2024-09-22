@@ -1,9 +1,8 @@
-use std::collections::HashMap;
-use crate::{constant, routes, squire, resources};
-use actix_web::cookie::{Cookie, SameSite};
+use crate::{constant, resources, routes, squire};
 use actix_web::http::StatusCode;
 use actix_web::{web, HttpRequest, HttpResponse};
 use fernet::Fernet;
+use std::collections::HashMap;
 use std::sync::Arc;
 
 /// Handles the monitor endpoint and rendering the appropriate HTML page.
@@ -27,14 +26,13 @@ pub async fn monitor(request: HttpRequest,
                      metadata: web::Data<Arc<constant::MetaData>>,
                      config: web::Data<Arc<squire::settings::Config>>,
                      template: web::Data<Arc<minijinja::Environment<'static>>>) -> HttpResponse {
-    let monitor_template = template.get_template("monitor").unwrap();
-    let mut response = HttpResponse::build(StatusCode::OK);
-    response.content_type("text/html; charset=utf-8");
-
     let auth_response = squire::authenticator::verify_token(&request, &config, &fernet, &session);
     if !auth_response.ok {
         return routes::auth::failed_auth(auth_response);
     }
+    let monitor_template = template.get_template("monitor").unwrap();
+    let mut response = HttpResponse::build(StatusCode::OK);
+    response.content_type("text/html; charset=utf-8");
     log::debug!("Session Validation Response: {}", auth_response.detail);
 
     let sys_info_map = resources::info::get_sys_info();
@@ -58,10 +56,5 @@ pub async fn monitor(request: HttpRequest,
         sys_info_network => sys_info_network,
         sys_info_disks => sys_info_disks
     )).unwrap();
-
-    let mut cookie = Cookie::new("session_token", "");
-    cookie.set_same_site(SameSite::Strict);
-    cookie.make_removal();
-    response.cookie(cookie);
     response.body(rendered)
 }

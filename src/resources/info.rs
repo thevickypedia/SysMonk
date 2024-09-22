@@ -20,7 +20,6 @@ pub fn get_sys_info() -> HashMap<&'static str, HashMap<&'static str, String>> {
     let uptime = squire::util::convert_seconds(uptime_duration);
 
     let total_memory = squire::util::size_converter(sys.total_memory());  // in bytes
-    let total_swap = squire::util::size_converter(sys.total_swap());  // in bytes
     let total_storage = squire::util::size_converter(sys.disks().iter().map(|disk| disk.total_space()).sum::<u64>());
 
     // Basic and Memory/Storage Info
@@ -32,11 +31,16 @@ pub fn get_sys_info() -> HashMap<&'static str, HashMap<&'static str, String>> {
         ("uptime", uptime),
         ("CPU_cores_raw", sys.cpus().len().to_string()
     )]);
-    let mem_storage = HashMap::from_iter(vec![
+    let mut hash_vec = vec![
         ("memory", total_memory),
-        ("swap", total_swap),
         ("storage", total_storage)
-    ]);
+    ];
+
+    let total_swap = sys.total_swap();  // in bytes
+    if total_swap != 0 {
+        hash_vec.push(("swap", squire::util::size_converter(total_swap)));
+    }
+    let mem_storage = HashMap::from_iter(hash_vec);
     HashMap::from_iter(vec![
         ("basic", basic),
         ("mem_storage", mem_storage)

@@ -71,6 +71,7 @@ pub async fn start() -> io::Result<()> {
             .service(routes::monitor::monitor)
             .service(routes::auth::logout)
             .service(routes::auth::error)
+            .configure(routes::configure_websocket)
     };
     let server = HttpServer::new(application)
         .workers(config.workers)

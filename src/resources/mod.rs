@@ -6,3 +6,4 @@ pub mod network;
 pub mod processor;
 pub mod disks;
 pub mod system;
+pub mod stream;
