@@ -136,7 +136,7 @@ pub fn get_content() -> String {
 
         .center-container {
             width: 100%;
-            margin-left: 45%;
+            margin-left: 40%;
         }
 
         .center-container details {

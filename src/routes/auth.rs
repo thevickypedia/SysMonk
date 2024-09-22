@@ -50,8 +50,6 @@ pub async fn login(request: HttpRequest,
     }
 
     let mapped = verified.unwrap();
-    squire::custom::log_connection(&request);
-
     let payload = serde_json::to_string(&mapped).unwrap();
     let encrypted_payload = fernet.encrypt(payload.as_bytes());
 
