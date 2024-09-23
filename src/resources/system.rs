@@ -8,6 +8,11 @@ pub struct OperatingSystem {
     pub architecture: String,
 }
 
+/// Function to get OS architecture.
+///
+/// # Returns
+///
+/// A string with the OS architecture.
 fn unamem() -> String {
     // Get architecture using `uname -m` with fallback
     let result = squire::util::run_command("uname", &["-m"]);
@@ -20,6 +25,11 @@ fn unamem() -> String {
     }
 }
 
+/// Function to get OS name.
+///
+/// # Returns
+///
+/// A string with the OS name.
 fn unameu() -> String {
     // Get OS using `uname`
     let result = squire::util::run_command("uname", &[]);
@@ -32,6 +42,11 @@ fn unameu() -> String {
     }
 }
 
+/// Function to get OS architecture.
+///
+/// # Returns
+///
+/// A `OperatingSystem` struct with the OS name and architecture.
 pub fn os_arch() -> OperatingSystem {
     let arch = match unamem() {
         arch if arch.contains("aarch64") || arch.contains("arm64") => "arm64",

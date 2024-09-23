@@ -87,6 +87,16 @@ pub fn size_converter(byte_size: u64) -> String {
     format!("{:.2} {}", size, size_name[index])
 }
 
+/// Function to parse size string.
+///
+/// # Arguments
+///
+/// * `size_str` - The size string to parse
+/// * `unit` - The unit to convert the size to
+///
+/// # Returns
+///
+/// A `String` containing the parsed size string.
 pub fn run_command(command: &str, args: &[&str]) -> Result<String, String> {
     match Command::new(command)
         .args(args)

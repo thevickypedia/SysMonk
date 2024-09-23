@@ -2,6 +2,15 @@ use crate::{resources, squire};
 use std::fs::File;
 use std::io::{self, BufRead};
 
+/// Function to get processor information.
+///
+/// # Arguments
+///
+/// * `lib_path` - The path to the library used to get processor information.
+///
+/// # Returns
+///
+/// A `Option` containing the processor information if successful, otherwise `None`.
 fn get_processor_info_darwin(lib_path: &str) -> Result<String, &'static str> {
     let result = squire::util::run_command(lib_path, &["-n", "machdep.cpu.brand_string"]);
     if result.is_err() {
@@ -10,6 +19,15 @@ fn get_processor_info_darwin(lib_path: &str) -> Result<String, &'static str> {
     Ok(result.unwrap())
 }
 
+/// Function to get processor information on Linux.
+///
+/// # Arguments
+///
+/// * `lib_path` - The path to the library used to get processor information.
+///
+/// # Returns
+///
+/// A `Option` containing the processor information if successful, otherwise `None`.
 fn get_processor_info_linux(lib_path: &str) -> Result<String, &'static str> {
     let file = match File::open(lib_path) {
         Ok(file) => file,
@@ -30,6 +48,16 @@ fn get_processor_info_linux(lib_path: &str) -> Result<String, &'static str> {
     }
     Err("Model name not found")
 }
+
+/// Function to get processor information on Windows.
+///
+/// # Arguments
+///
+/// * `lib_path` - The path to the library used to get processor information.
+///
+/// # Returns
+///
+/// A `Option` containing the processor information if successful, otherwise `None`.
 fn get_processor_info_windows(lib_path: &str) -> Result<String, &'static str> {
     let result = squire::util::run_command(lib_path, &["cpu", "get", "name"]);
     let output = match result {
@@ -44,6 +72,11 @@ fn get_processor_info_windows(lib_path: &str) -> Result<String, &'static str> {
     }
 }
 
+/// OS-agnostic function to get processor name.
+///
+/// # Returns
+///
+/// A `Option` containing the processor name if successful, otherwise `None`.
 pub fn get_name() -> Option<String> {
     let os = resources::system::os_arch().name;
     let result = match os.as_str() {

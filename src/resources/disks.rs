@@ -6,20 +6,30 @@ use crate::squire;
 
 // todo: tested only on macOS
 
-fn format_nos(input: f64) -> f64 {
-    if input.fract() == 0.0 {
-        input.trunc()
-    } else {
-        input
-    }
-}
-
+/// Function to convert byte size to human-readable format.
+///
+/// # Arguments
+///
+/// * `byte_size` - The size in bytes to convert
+///
+/// # Returns
+///
+/// A `String` containing the human-readable format of the byte size
 fn size_converter(byte_size: f64) -> String {
     let size_name = ["B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
     let index = byte_size.log(1024.0).floor() as usize;
-    format!("{:.2} {}", format_nos(byte_size / 1024.0_f64.powi(index as i32)), size_name[index])
+    format!("{:.2} {}", byte_size / 1024.0_f64.powi(index as i32), size_name[index])
 }
 
+/// Function to parse size string.
+///
+/// # Arguments
+///
+/// * `size_str` - The size string to parse
+///
+/// # Returns
+///
+/// A `String` containing the parsed size string.
 fn parse_size(size_str: &str) -> String {
     let re = Regex::new(r"([\d.]+)([KMGTP]?)").unwrap();
     if let Some(caps) = re.captures(size_str.trim()) {
@@ -42,6 +52,16 @@ fn parse_size(size_str: &str) -> String {
         .replace("P", " PB")
 }
 
+/// Function to check if disk is physical for macOS specific.
+///
+/// # Arguments
+///
+/// * `lib_path` - The path to the library
+/// * `device_id` - The device ID
+///
+/// # Returns
+///
+/// A `bool` indicating if the disk is physical.
 fn is_physical_disk(lib_path: &str, device_id: &str) -> bool {
     let result = squire::util::run_command(lib_path, &["info", device_id]);
     let output = match result {
@@ -59,6 +79,15 @@ fn is_physical_disk(lib_path: &str, device_id: &str) -> bool {
     true
 }
 
+/// Function to get disk information on Linux.
+///
+/// # Arguments
+///
+/// * `lib_path` - The path to the library used to get disks' information.
+///
+/// # Returns
+///
+/// A `Vec` of `HashMap` containing the disk information.
 fn linux_disks(lib_path: &str) -> Vec<HashMap<String, String>> {
     let result = squire::util::run_command(lib_path, &["-o", "NAME,SIZE,TYPE,MODEL", "-d"]);
     let output = match result {
@@ -89,6 +118,15 @@ fn linux_disks(lib_path: &str) -> Vec<HashMap<String, String>> {
     disk_info
 }
 
+/// Function to get disk information on macOS.
+///
+/// # Arguments
+///
+/// * `lib_path` - The path to the library used to get disks' information.
+///
+/// # Returns
+///
+/// A `Vec` of `HashMap` containing the disk information.
 fn darwin_disks(lib_path: &str) -> Vec<HashMap<String, String>> {
     let result = squire::util::run_command(lib_path, &["list"]);
     let output = match result {
@@ -131,6 +169,15 @@ fn darwin_disks(lib_path: &str) -> Vec<HashMap<String, String>> {
     disk_info
 }
 
+/// Function to reformat disk information on Windows.
+///
+/// # Arguments
+///
+/// * `data` - A mutable reference to the disk information.
+///
+/// # Returns
+///
+/// A `HashMap` containing the reformatted disk information.
 fn reformat_windows(data: &mut HashMap<String, Value>) -> HashMap<String, String> {
     let size = data.get("Size").unwrap().as_f64().unwrap();
     let model = data.get("Model").unwrap().as_str().unwrap().to_string();
@@ -141,6 +188,15 @@ fn reformat_windows(data: &mut HashMap<String, Value>) -> HashMap<String, String
     reformatted_data
 }
 
+/// Function to get disk information on Windows.
+///
+/// # Arguments
+///
+/// * `lib_path` - The path to the library used to get disks' information.
+///
+/// # Returns
+///
+/// A `Vec` of `HashMap` containing the disk information.
 fn windows_disks(lib_path: &str) -> Vec<HashMap<String, String>> {
     let ps_command = "Get-CimInstance Win32_DiskDrive | Select-Object Caption, DeviceID, Model, Partitions, Size | ConvertTo-Json";
     let result = squire::util::run_command(lib_path, &["-Command", ps_command]);
@@ -165,6 +221,11 @@ fn windows_disks(lib_path: &str) -> Vec<HashMap<String, String>> {
     disk_info
 }
 
+/// Function to get all disks' information.
+///
+/// # Returns
+///
+/// A `Vec` of `HashMap` containing the disk information.
 pub fn get_all_disks() -> Vec<HashMap<String, String>> {
     let operating_system = std::env::consts::OS;
     match operating_system {
