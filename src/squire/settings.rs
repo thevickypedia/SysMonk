@@ -31,7 +31,7 @@ pub struct Config {
 pub fn default_debug() -> bool { false }
 
 /// Returns the default value for UTC logging.
-pub fn default_utc_logging() -> bool { true }
+pub fn default_utc_logging() -> bool { false }
 
 /// Returns the default host based on the local machine's IP address.
 pub fn default_host() -> String {

@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use chrono::Utc;
+use inflector::cases::titlecase::to_title_case;
 use sysinfo::{DiskExt, System, SystemExt};
 use crate::{squire, resources};
 
@@ -26,7 +27,7 @@ pub fn get_sys_info() -> HashMap<&'static str, HashMap<&'static str, String>> {
     let os_arch = resources::system::os_arch();
     let basic = HashMap::from_iter(vec![
         ("node", sys.host_name().unwrap_or("Unknown".to_string())),
-        ("system", os_arch.name),
+        ("system", to_title_case(&os_arch.name)),
         ("architecture", os_arch.architecture),
         ("uptime", uptime),
         ("CPU_cores_raw", sys.cpus().len().to_string()

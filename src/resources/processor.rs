@@ -1,20 +1,15 @@
-use crate::resources;
+use crate::{resources, squire};
 use std::fs::File;
 use std::io::{self, BufRead};
-use std::process::Command;
 
 fn get_processor_info_darwin(lib_path: &str) -> Result<String, &'static str> {
-    let output = match Command::new(lib_path)
-        .arg("-n")
-        .arg("machdep.cpu.brand_string")
-        .output()
-    {
-        Ok(output) => output,
-        Err(_) => return Err("Failed to execute command"),
-    };
-    let result = String::from_utf8_lossy(&output.stdout).trim().to_string();
-    Ok(result)
+    let result = squire::util::run_command(lib_path, &["-n", "machdep.cpu.brand_string"]);
+    if result.is_err() {
+        return Err("Failed to get processor info");
+    }
+    Ok(result.unwrap())
 }
+
 fn get_processor_info_linux(lib_path: &str) -> Result<String, &'static str> {
     let file = match File::open(lib_path) {
         Ok(file) => file,
@@ -36,17 +31,12 @@ fn get_processor_info_linux(lib_path: &str) -> Result<String, &'static str> {
     Err("Model name not found")
 }
 fn get_processor_info_windows(lib_path: &str) -> Result<String, &'static str> {
-    let output = match Command::new(lib_path)
-        .arg("cpu")
-        .arg("get")
-        .arg("name")
-        .output()
-    {
+    let result = squire::util::run_command(lib_path, &["cpu", "get", "name"]);
+    let output = match result {
         Ok(output) => output,
-        Err(_) => return Err("Failed to execute command"),
+        Err(_) => return Err("Failed to get processor info"),
     };
-    let output_str = String::from_utf8_lossy(&output.stdout);
-    let lines: Vec<&str> = output_str.trim().split('\n').collect();
+    let lines: Vec<&str> = output.trim().split('\n').collect();
     if lines.len() > 1 {
         Ok(lines[1].trim().to_string())
     } else {

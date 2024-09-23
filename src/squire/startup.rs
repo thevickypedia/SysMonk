@@ -3,8 +3,8 @@ use std::io::Write;
 
 use chrono::{DateTime, Local};
 
-use crate::{constant, squire};
 use crate::squire::settings;
+use crate::{constant, squire};
 
 /// Initializes the logger based on the provided debug flag and cargo information.
 ///
@@ -25,23 +25,29 @@ pub fn init_logger(debug: bool, utc: bool, crate_name: &String) {
         ));
         std::env::set_var("RUST_BACKTRACE", "0");
     }
+    let timestamp;
     if utc {
-        env_logger::init();
+        timestamp = DateTime::<chrono::Utc>::from(Local::now())
+            .format("%Y-%m-%dT%H:%M:%SZ")
+            .to_string();
     } else {
-        env_logger::Builder::from_default_env()
-            .format(|buf, record| {
-                let local_time: DateTime<Local> = Local::now();
-                writeln!(
-                    buf,
-                    "[{} {} {}] - {}",
-                    local_time.format("%Y-%m-%dT%H:%M:%SZ"),
-                    record.level(),
-                    record.target(),
-                    record.args()
-                )
-            })
-            .init();
+        timestamp = Local::now()
+            .format("%Y-%m-%dT%H:%M:%SZ")
+            .to_string();
     }
+    env_logger::Builder::from_default_env()
+        .format(move |buf, record| {
+            writeln!(
+                buf,
+                "[{} {} {}:{}] - {}",
+                timestamp,
+                record.level(),
+                record.target(),
+                record.line().unwrap_or(0),
+                record.args()
+            )
+        })
+        .init();
 }
 
 /// Extracts the mandatory env vars by key and parses it as `HashMap<String, String>` and `PathBuf`

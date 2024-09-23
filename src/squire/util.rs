@@ -1,4 +1,5 @@
 use regex::Regex;
+use std::process::Command;
 use std::collections::HashMap;
 
 /// Function to retrieve the REGEX object for an IPv4 address format
@@ -84,4 +85,28 @@ pub fn size_converter(byte_size: u64) -> String {
     }
 
     format!("{:.2} {}", size, size_name[index])
+}
+
+pub fn run_command(command: &str, args: &[&str]) -> Result<String, String> {
+    match Command::new(command)
+        .args(args)
+        .output()
+    {
+        Ok(output) => {
+            if output.status.success() {
+                log::debug!("Command [{}] executed successfully", &command);
+                Ok(String::from_utf8_lossy(&output.stdout).trim().to_string())
+            } else {
+                let stderr = String::from_utf8_lossy(&output.stderr).to_string();
+                let exit_code = output.status.code().unwrap_or(-1); // Handle exit code
+                log::error!("Command [{}] failed with exit code: {}", command, exit_code);
+                log::error!("Stderr: {}", stderr);
+                Err(stderr)
+            }
+        }
+        Err(err) => {
+            log::error!("Failed to execute command: {}", err);
+            Err(err.to_string())
+        }
+    }
 }

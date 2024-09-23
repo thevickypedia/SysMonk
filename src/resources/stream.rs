@@ -3,7 +3,7 @@ use sysinfo::{CpuExt, System, SystemExt};
 
 
 use serde_json;
-use std::process::{Command, Stdio};
+use crate::squire;
 
 /// Function to get docker stats via commandline.
 ///
@@ -11,26 +11,33 @@ use std::process::{Command, Stdio};
 ///
 /// A `Result` containing a `Vec` of `serde_json::Value` if successful, otherwise an empty `Vec`.
 fn get_docker_stats() -> Result<Vec<serde_json::Value>, Box<dyn std::error::Error>> {
-    let process = match Command::new("docker")
-        .args(["stats", "--no-stream", "--format", "{{json .}}"])
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .spawn()
-    {
-        Ok(process) => process,
-        Err(_) => {
-            log::error!("Failed to execute command");
+    // Check if there are any docker containers running
+    // `docker -a` will show all containers including stopped, which will block `docker stats`
+    let ps_result = squire::util::run_command("docker", &["ps", "-q"]);
+    let stats_result = match ps_result {
+        Ok(output) if !output.is_empty() => {
+            let stats_result = squire::util::run_command(
+                "docker",
+                &["stats", "--no-stream", "--format", "{{json .}}"]
+            );
+            match stats_result {
+                Ok(stats) => stats,
+                Err(err) => {
+                    log::error!("Error running docker stats: {}", err);
+                    return Ok(vec![]);
+                },
+            }
+        }
+        Ok(_) => {
+            log::debug!("No running containers");
+            return Ok(vec![]);
+        },
+        Err(err) => {
+            log::error!("Error checking containers: {}", err);
             return Ok(vec![]);
         },
     };
-    let output = process.wait_with_output().unwrap();
-    if !output.status.success() {
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        log::error!("Error: {}", stderr);
-        return Ok(vec![]);
-    }
-    let stdout = String::from_utf8_lossy(&output.stdout);
-    let stats: Vec<serde_json::Value> = stdout
+    let stats: Vec<serde_json::Value> = stats_result
         .lines()
         .filter_map(|line| serde_json::from_str(line).ok())
         .collect();

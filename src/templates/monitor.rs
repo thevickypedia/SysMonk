@@ -319,7 +319,7 @@ pub fn get_content() -> String {
         };
         ws.onclose = () => {
             console.log('WebSocket connection closed');
-            alert('WebSocket connection closed. Please login again.');
+            alert('WebSocket connection closed by the server!');
             logOut();
             return;
         };

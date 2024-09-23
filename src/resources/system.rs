@@ -1,6 +1,6 @@
-use std::process::Command;
 use std::str;
 use serde::{Deserialize, Serialize};
+use crate::squire;
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct OperatingSystem {
@@ -10,43 +10,26 @@ pub struct OperatingSystem {
 
 fn unamem() -> String {
     // Get architecture using `uname -m` with fallback
-    let uname_m_output = match Command::new("uname")
-        .arg("-m")
-        .output() {
-        Ok(output) => output,
+    let result = squire::util::run_command("uname", &["-m"]);
+    match result {
+        Ok(output) => output.to_lowercase(),
         Err(_) => {
-            log::error!("Failed to read uname output");
-            return "".to_string();
-        },
-    };
-    let unamem = match str::from_utf8(&uname_m_output.stdout) {
-        Ok(output) => output.trim().to_string(),
-        Err(_) => {
-            log::error!("Failed to read uname output");
+            log::error!("Failed to execute command");
             "".to_string()
         },
-    };
-    unamem.to_string()
+    }
 }
 
 fn unameu() -> String {
     // Get OS using `uname`
-    let uname_output = match Command::new("uname")
-        .output() {
-        Ok(output) => output,
+    let result = squire::util::run_command("uname", &[]);
+    match result {
+        Ok(output) => output.to_uppercase(),
         Err(_) => {
-            log::error!("Failed to read uname output");
-            return std::env::consts::OS.to_uppercase();
-        },
-    };
-    let unameu = match str::from_utf8(&uname_output.stdout) {
-        Ok(output) => output.trim().to_string(),
-        Err(_) => {
-            log::error!("Failed to read uname output");
+            log::error!("Failed to execute command");
             std::env::consts::OS.to_uppercase()
         },
-    };
-    unameu.to_uppercase()
+    }
 }
 
 pub fn os_arch() -> OperatingSystem {

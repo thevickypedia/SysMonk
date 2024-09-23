@@ -25,7 +25,7 @@ async fn send_system_resources(mut session: actix_ws::Session) {
             }
         }
         // 500ms / 0.5s delay
-        sleep(Duration::from_millis(500)).await;
+        sleep(Duration::from_secs(1)).await;
     }
 }
 
@@ -91,6 +91,7 @@ async fn echo(
     config: web::Data<Arc<squire::settings::Config>>,
     stream: web::Payload,
 ) -> Result<HttpResponse, Error> {
+    log::info!("Websocket connection initiated");
     let auth_response = squire::authenticator::verify_token(&request, &config, &fernet, &session_info);
     if !auth_response.ok {
         return Ok(routes::auth::failed_auth(auth_response));
@@ -103,11 +104,9 @@ async fn echo(
     };
     // todo: implement a session timeout here
     let stream = stream
-        .aggregate_continuations()
-        // aggregate continuation frames up to 1MiB
-        // todo: check and remove limit if necessary
-        .max_continuation_size(2_usize.pow(20));
+        .aggregate_continuations();
     rt::spawn(async move {
+        log::warn!("Connection established");
         let send_task = send_system_resources(session.clone());
         let receive_task = receive_messages(session, stream);
         future::join(send_task, receive_task).await;

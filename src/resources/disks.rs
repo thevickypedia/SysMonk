@@ -1,8 +1,8 @@
 use std::collections::HashMap;
-use std::process::Command;
 use std::str;
 use regex::Regex;
 use serde_json::Value;
+use crate::squire;
 
 // todo: tested only on macOS
 
@@ -16,7 +16,7 @@ fn format_nos(input: f64) -> f64 {
 
 fn size_converter(byte_size: f64) -> String {
     let size_name = ["B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
-    let index = (byte_size.log(1024.0)).floor() as usize;
+    let index = byte_size.log(1024.0).floor() as usize;
     format!("{:.2} {}", format_nos(byte_size / 1024.0_f64.powi(index as i32)), size_name[index])
 }
 
@@ -42,17 +42,15 @@ fn parse_size(size_str: &str) -> String {
         .replace("P", " PB")
 }
 
-fn run_command(command: &str, args: &[&str]) -> String {
-    let output = Command::new(command)
-        .args(args)
-        .output()
-        .expect("Failed to execute command");
-    String::from_utf8_lossy(&output.stdout).to_string()
-}
-
 fn is_physical_disk(lib_path: &str, device_id: &str) -> bool {
-    let output = run_command(lib_path, &["info", device_id]);
-    // !output.contains("Virtual:Yes")
+    let result = squire::util::run_command(lib_path, &["info", device_id]);
+    let output = match result {
+        Ok(output) => output,
+        Err(_) => {
+            log::error!("Failed to get disk info");
+            return false;
+        },
+    };
     for line in output.split("\n") {
         if line.contains("Virtual:") && line.contains("Yes") {
             return false;
@@ -62,7 +60,14 @@ fn is_physical_disk(lib_path: &str, device_id: &str) -> bool {
 }
 
 fn linux_disks(lib_path: &str) -> Vec<HashMap<String, String>> {
-    let output = run_command(lib_path, &["-o", "NAME,SIZE,TYPE,MODEL", "-d"]);
+    let result = squire::util::run_command(lib_path, &["-o", "NAME,SIZE,TYPE,MODEL", "-d"]);
+    let output = match result {
+        Ok(output) => output,
+        Err(_) => {
+            log::error!("Failed to get disk info");
+            return Vec::new();
+        },
+    };
     let disks: Vec<&str> = output.lines().collect();
     let filtered_disks: Vec<&str> = disks.into_iter().filter(|&disk| !disk.contains("loop")).collect();
     let keys_raw = filtered_disks[0].to_lowercase()
@@ -85,7 +90,14 @@ fn linux_disks(lib_path: &str) -> Vec<HashMap<String, String>> {
 }
 
 fn darwin_disks(lib_path: &str) -> Vec<HashMap<String, String>> {
-    let output = run_command(lib_path, &["list"]);
+    let result = squire::util::run_command(lib_path, &["list"]);
+    let output = match result {
+        Ok(output) => output,
+        Err(_) => {
+            log::error!("Failed to get disk info");
+            return Vec::new();
+        },
+    };
     let disks: Vec<&str> = output.lines().collect();
     let disk_lines: Vec<&str> = disks.into_iter().filter(|&line| line.starts_with("/dev/disk")).collect();
     let mut disk_info = Vec::new();
@@ -94,7 +106,14 @@ fn darwin_disks(lib_path: &str) -> Vec<HashMap<String, String>> {
         if !is_physical_disk(lib_path, device_id) {
             continue;
         }
-        let disk_info_output = run_command(lib_path, &["info", device_id]);
+        let result = squire::util::run_command(lib_path, &["info", device_id]);
+        let disk_info_output = match result {
+            Ok(output) => output,
+            Err(_) => {
+                log::error!("Failed to get disk info");
+                return Vec::new();
+            },
+        };
         let info_lines: Vec<&str> = disk_info_output.lines().collect();
         let mut disk_data = HashMap::new();
         for info_line in info_lines {
@@ -124,7 +143,14 @@ fn reformat_windows(data: &mut HashMap<String, Value>) -> HashMap<String, String
 
 fn windows_disks(lib_path: &str) -> Vec<HashMap<String, String>> {
     let ps_command = "Get-CimInstance Win32_DiskDrive | Select-Object Caption, DeviceID, Model, Partitions, Size | ConvertTo-Json";
-    let output = run_command(lib_path, &["-Command", ps_command]);
+    let result = squire::util::run_command(lib_path, &["-Command", ps_command]);
+    let output = match result {
+        Ok(output) => output,
+        Err(_) => {
+            log::error!("Failed to get disk info");
+            return Vec::new();
+        },
+    };
     let disks_info: Value = serde_json::from_str(&output).unwrap();
     let mut disk_info = Vec::new();
     if let Some(disks) = disks_info.as_array() {
