@@ -1,5 +1,5 @@
 use crate::{constant, resources, routes, squire};
-use actix_web::rt::time::sleep;
+use actix;
 use actix_web::{rt, web, Error, HttpRequest, HttpResponse};
 use actix_ws::AggregatedMessage;
 use fernet::Fernet;
@@ -13,19 +13,20 @@ use std::time::Duration;
 /// # Arguments
 ///
 /// * `request` - A reference to the Actix web `HttpRequest` object.
-async fn send_system_resources(mut session: actix_ws::Session) {
+async fn send_system_resources(request: HttpRequest, mut session: actix_ws::Session) {
+    let host = request.connection_info().host().to_string();
     loop {
         let system_resources = resources::stream::system_resources();
         let serialized = serde_json::to_string(&system_resources).unwrap();
         match session.text(serialized).await {
             Ok(_) => (),
             Err(err) => {
-                log::warn!("Connection {} by the client!", err);
+                log::info!("Connection from '{}' has been {}", host, err.to_string().to_lowercase());
                 break;
             }
         }
         // 500ms / 0.5s delay
-        sleep(Duration::from_secs(1)).await;
+        rt::time::sleep(Duration::from_secs(1)).await;
     }
 }
 
@@ -49,7 +50,7 @@ async fn send_system_resources(mut session: actix_ws::Session) {
 /// * `stream` - A stream of `AggregatedMessage` objects.
 async fn receive_messages(
     mut session: actix_ws::Session,
-    mut stream: impl futures::Stream<Item=Result<AggregatedMessage, actix_ws::ProtocolError>> + Unpin
+    mut stream: impl futures::Stream<Item=Result<AggregatedMessage, actix_ws::ProtocolError>> + Unpin,
 ) {
     while let Some(msg) = stream.next().await {
         match msg {
@@ -68,6 +69,20 @@ async fn receive_messages(
             _ => {}
         }
     }
+}
+
+/// Handles the session by closing it after a certain duration.
+///
+/// # Arguments
+///
+/// * `session` - A reference to the Actix web `Session` object.
+/// * `duration` - Duration in seconds to keep the session alive.
+async fn session_handler(session: actix_ws::Session, duration: i64) {
+    let session = session.clone();
+    actix::spawn(async move {
+        rt::time::sleep(Duration::from_secs(duration as u64)).await;
+        let _ = session.close(None).await;
+    });
 }
 
 /// Handles the WebSocket endpoint for system resources.
@@ -100,17 +115,16 @@ async fn echo(
         Ok(result) => result,
         Err(_) => {
             return Ok(HttpResponse::ServiceUnavailable().finish());
-        },
+        }
     };
-    // todo: implement a session timeout here
     let stream = stream
         .aggregate_continuations();
     rt::spawn(async move {
         log::warn!("Connection established");
-        let send_task = send_system_resources(session.clone());
-        let receive_task = receive_messages(session, stream);
-        future::join(send_task, receive_task).await;
+        let send_task = send_system_resources(request.clone(), session.clone());
+        let receive_task = receive_messages(session.clone(), stream);
+        let session_task = session_handler(session.clone(), config.session_duration);
+        future::join3(send_task, receive_task, session_task).await;
     });
-    // respond immediately with response connected to WS session
     Ok(response)
 }

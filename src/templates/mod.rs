@@ -1,6 +1,6 @@
 use std::sync::Arc;
 use minijinja::{value::Value};
-use inflector::cases::titlecase::to_title_case;
+use crate::squire;
 
 /// Index page template that is served as HTML response for the root endpoint.
 mod index;
@@ -44,7 +44,7 @@ fn capwords_filter(value: Value) -> Result<Value, minijinja::Error> {
             Ok(Value::from(result))
         } else {
             let result = val.replace("_", " ");
-            Ok(Value::from(to_title_case(&result)))
+            Ok(Value::from(squire::util::capwords(&result, None)))
         }
     } else {
         panic!("capwords filter only works with strings");

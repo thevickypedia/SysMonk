@@ -120,3 +120,30 @@ pub fn run_command(command: &str, args: &[&str]) -> Result<String, String> {
         }
     }
 }
+
+/// Function to capitalize the first letter of each word in a string.
+///
+/// # Arguments
+///
+/// * `s` - The string to capitalize
+/// * `sep` - The separator to split the string
+///
+/// # Returns
+///
+/// A `String` containing the capitalized string
+pub fn capwords(string: &str, sep: Option<&str>) -> String {
+    let separator = sep.unwrap_or(" ");
+    let mut result = Vec::new();
+
+    for word in string.split(separator) {
+        let mut chars = word.chars();
+        if let Some(first) = chars.next() {
+            let capitalized_word = first.to_uppercase().collect::<String>() + chars.as_str();
+            result.push(capitalized_word);
+        } else {
+            result.push(String::new());
+        }
+    }
+
+    result.join(separator)
+}

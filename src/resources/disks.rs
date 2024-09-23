@@ -4,8 +4,6 @@ use regex::Regex;
 use serde_json::Value;
 use crate::squire;
 
-// todo: tested only on macOS
-
 /// Function to convert byte size to human-readable format.
 ///
 /// # Arguments
