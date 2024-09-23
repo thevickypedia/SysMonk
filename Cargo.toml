@@ -1,6 +1,6 @@
 [package]
 name = "SysMonk"
-version = "0.0.0-alpha"
+version = "0.0.0-beta"
 description = "Sytem Monitor is a Rust based CLI tool to monitor system resources."
 license = "MIT"
 documentation = "https://docs.rs/SysMonk"
@@ -43,7 +43,7 @@ sha2 = "0.10.8"
 rand = "0.8.5"
 fernet = "0.2.2"
 sysinfo = "0.26.7"
-reqwest = { version = "0.11", features = ["blocking", "json"] }
+reqwest = { version = "0.12.7", features = ["blocking", "json"] }
 minijinja = { version =  "2.3.1", features = ["loader"] }
 url = "2.5.2"
 regex = "1.10.6"
