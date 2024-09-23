@@ -4,6 +4,23 @@ use inflector::cases::titlecase::to_title_case;
 use sysinfo::{DiskExt, System, SystemExt};
 use crate::{squire, resources};
 
+/// Function to get total disk usage.
+///
+/// # Arguments
+///
+/// * `system` - A reference to the `System` struct.
+///
+/// # Returns
+///
+/// A `u64` value containing the total disk usage.
+pub fn get_disk_usage(system: &System) -> u64 {
+    let mut disks_space = vec![];
+    for disk in system.disks() {
+        disks_space.push(disk.total_space());
+    }
+    disks_space.iter().sum()
+}
+
 /// Function to get system information
 ///
 /// This function retrieves system information such as basic system information and memory/storage information.
@@ -21,7 +38,7 @@ pub fn get_sys_info() -> HashMap<&'static str, HashMap<&'static str, String>> {
     let uptime = squire::util::convert_seconds(uptime_duration);
 
     let total_memory = squire::util::size_converter(sys.total_memory());  // in bytes
-    let total_storage = squire::util::size_converter(sys.disks().iter().map(|disk| disk.total_space()).sum::<u64>());
+    let total_storage = squire::util::size_converter(get_disk_usage(&sys));  // in bytes
 
     // Basic and Memory/Storage Info
     let os_arch = resources::system::os_arch();

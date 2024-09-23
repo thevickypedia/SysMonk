@@ -149,26 +149,6 @@ pub fn get_content() -> String {
             align-content: center;
         }
 
-        .docs {
-            position: absolute;
-            top: 3.8%;
-            right: 230px;
-            border: none;
-            padding: 10px 14px;
-            font-size: 16px;
-            cursor: pointer;
-        }
-
-        .redoc {
-            position: absolute;
-            top: 3.8%;
-            right: 130px;
-            border: none;
-            padding: 10px 14px;
-            font-size: 16px;
-            cursor: pointer;
-        }
-
         .logout {
             position: absolute;
             top: 3.8%;
@@ -203,8 +183,6 @@ pub fn get_content() -> String {
 </div>
 <body translate="no">
 <div class="toggler fa fa-moon-o"></div>
-<button class="docs" onclick="goDocs()"><i class="fa fa-book"></i> Docs</button>
-<button class="redoc" onclick="goReDoc()"><i class="fa fa-file"></i> ReDoc</button>
 <button class="logout" onclick="logOut()"><i class="fa fa-sign-out"></i> Logout</button>
 <h1>SysMonk - System Monitor</h1>
 <div class="center-container">
@@ -569,14 +547,6 @@ pub fn get_content() -> String {
 
     function logOut() {
         window.location.href = window.location.origin + "{{ logout }}";
-    }
-
-    function goDocs() {
-        window.location.href = window.location.origin + "/docs";
-    }
-
-    function goReDoc() {
-        window.location.href = window.location.origin + "/redoc";
     }
 </script>
 </body>

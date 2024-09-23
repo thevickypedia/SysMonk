@@ -25,16 +25,15 @@ pub fn init_logger(debug: bool, utc: bool, crate_name: &String) {
         ));
         std::env::set_var("RUST_BACKTRACE", "0");
     }
-    let timestamp;
-    if utc {
-        timestamp = DateTime::<chrono::Utc>::from(Local::now())
+    let timestamp = if utc {
+        DateTime::<chrono::Utc>::from(Local::now())
             .format("%Y-%m-%dT%H:%M:%SZ")
-            .to_string();
+            .to_string()
     } else {
-        timestamp = Local::now()
+        Local::now()
             .format("%Y-%m-%dT%H:%M:%SZ")
-            .to_string();
-    }
+            .to_string()
+    };
     env_logger::Builder::from_default_env()
         .format(move |buf, record| {
             writeln!(
