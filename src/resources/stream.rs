@@ -2,8 +2,8 @@ use std::collections::HashMap;
 use sysinfo::{CpuExt, System, SystemExt};
 
 
-use serde_json;
 use crate::squire;
+use serde_json;
 
 /// Function to get docker stats via commandline.
 ///
@@ -18,24 +18,24 @@ fn get_docker_stats() -> Result<Vec<serde_json::Value>, Box<dyn std::error::Erro
         Ok(output) if !output.is_empty() => {
             let stats_result = squire::util::run_command(
                 "docker",
-                &["stats", "--no-stream", "--format", "{{json .}}"]
+                &["stats", "--no-stream", "--format", "{{json .}}"],
             );
             match stats_result {
                 Ok(stats) => stats,
                 Err(err) => {
                     log::error!("Error running docker stats: {}", err);
                     return Ok(vec![]);
-                },
+                }
             }
         }
         Ok(_) => {
             log::debug!("No running containers");
             return Ok(vec![]);
-        },
+        }
         Err(err) => {
             log::error!("Error checking containers: {}", err);
             return Ok(vec![]);
-        },
+        }
     };
     let stats: Vec<serde_json::Value> = stats_result
         .lines()

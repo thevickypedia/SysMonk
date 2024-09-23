@@ -1,7 +1,7 @@
-use std::collections::HashMap;
+use crate::{resources, squire};
 use chrono::Utc;
+use std::collections::HashMap;
 use sysinfo::{DiskExt, System, SystemExt};
-use crate::{squire, resources};
 
 /// Function to get total disk usage.
 ///
@@ -47,7 +47,7 @@ pub fn get_sys_info() -> HashMap<&'static str, HashMap<&'static str, String>> {
         ("architecture", os_arch.architecture),
         ("uptime", uptime),
         ("CPU_cores_raw", sys.cpus().len().to_string()
-    )]);
+        )]);
     let mut hash_vec = vec![
         ("memory", total_memory),
         ("storage", total_storage)

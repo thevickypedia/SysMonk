@@ -1,7 +1,7 @@
+use fernet::Fernet;
 use std::collections::HashMap;
 use std::env;
 use std::sync::{Arc, Mutex};
-use fernet::Fernet;
 
 /// Struct to store the cargo information gathered at compile time using the `env!` macro.
 #[allow(dead_code)]

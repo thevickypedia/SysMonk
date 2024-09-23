@@ -1,6 +1,6 @@
-use std::sync::Arc;
-use minijinja::{value::Value};
 use crate::squire;
+use minijinja::value::Value;
+use std::sync::Arc;
 
 /// Index page template that is served as HTML response for the root endpoint.
 mod index;
@@ -14,8 +14,6 @@ mod monitor;
 mod unauthorized;
 /// Error page template that is served as HTML response for any error message to be conveyed.
 mod error;
-
-/// Error page template that is served as HTML response for any error message to be conveyed.
 
 /// Loads all the HTML templates' content into a Jinja Environment
 ///
@@ -35,7 +33,15 @@ pub fn environment() -> Arc<minijinja::Environment<'static>> {
     Arc::new(env)
 }
 
-// Custom filter function
+/// Capitalizes the first character of each word in a string.
+///
+/// # Arguments
+///
+/// * `value` - A `Value` object that holds the string to be capitalized.
+///
+/// # Returns
+///
+/// Returns the `Value` object with the capitalized string.
 fn capwords_filter(value: Value) -> Result<Value, minijinja::Error> {
     if let Some(val) = value.as_str() {
         if val.ends_with("_raw") {

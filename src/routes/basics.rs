@@ -1,7 +1,7 @@
-use std::sync::Arc;
-use actix_web::{web, HttpRequest, HttpResponse};
-use actix_web::http::StatusCode;
 use crate::{constant, squire};
+use actix_web::http::StatusCode;
+use actix_web::{web, HttpRequest, HttpResponse};
+use std::sync::Arc;
 
 /// Handles the health endpoint, returning a JSON response indicating the server is healthy.
 ///

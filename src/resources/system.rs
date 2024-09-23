@@ -1,6 +1,6 @@
-use std::str;
-use serde::{Deserialize, Serialize};
 use crate::squire;
+use serde::{Deserialize, Serialize};
+use std::str;
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct OperatingSystem {
@@ -21,7 +21,7 @@ fn unamem() -> String {
         Err(_) => {
             log::error!("Failed to execute command");
             "".to_string()
-        },
+        }
     }
 }
 
@@ -38,7 +38,7 @@ fn unameu() -> String {
         Err(_) => {
             log::error!("Failed to execute command");
             std::env::consts::OS.to_uppercase()
-        },
+        }
     }
 }
 

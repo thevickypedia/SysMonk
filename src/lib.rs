@@ -6,7 +6,7 @@ extern crate actix_web;
 
 use std::io;
 
-use actix_web::{App, HttpServer, middleware, web};
+use actix_web::{middleware, web, App, HttpServer};
 
 /// Module for the structs and functions called during startup.
 mod constant;
@@ -76,14 +76,11 @@ pub async fn start() -> io::Result<()> {
     let server = HttpServer::new(application)
         .workers(config.workers)
         .max_connections(config.max_connections);
-    server.bind(host)?
-        .run()
-        .await
-    // match server.bind(host) {
-    //     Ok(bound_server) => bound_server.run().await,
-    //     Err(err) => {
-    //         log::error!("Failed to bind server: {}", err);
-    //         Err(err)
-    //     }
-    // }
+    match server.bind(host) {
+        Ok(bound_server) => bound_server.run().await,
+        Err(err) => {
+            log::error!("Failed to bind server: {}", err);
+            Err(err)
+        }
+    }
 }

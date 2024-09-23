@@ -9,6 +9,11 @@ pub mod websocket;
 
 use actix_web::web;
 
+/// Configures the websocket service.
+///
+/// # Arguments
+///
+/// * `cfg` - A mutable reference to the Actix web `ServiceConfig` object.
 pub fn configure_websocket(cfg: &mut web::ServiceConfig) {
     cfg.service(websocket::echo);
 }

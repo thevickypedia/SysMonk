@@ -1,5 +1,5 @@
-use std::thread;
 use std::net::ToSocketAddrs;
+use std::thread;
 
 /// Represents the configuration parameters for SysMonk.
 pub struct Config {

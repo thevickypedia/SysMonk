@@ -1,8 +1,8 @@
-use std::collections::HashMap;
+use crate::squire;
 use reqwest;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::net::UdpSocket;
-use crate::squire;
 
 /// Function to retrieve the public IP address
 ///

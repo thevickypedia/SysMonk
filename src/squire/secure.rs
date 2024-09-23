@@ -1,8 +1,8 @@
 extern crate base64;
 extern crate sha2;
 
-use base64::{Engine as _, engine::general_purpose::URL_SAFE};
-use rand::{Rng, thread_rng};
+use base64::{engine::general_purpose::URL_SAFE, Engine as _};
+use rand::{thread_rng, Rng};
 use sha2::{Digest, Sha512};
 
 /// Calculates the SHA-512 hash value for the given payload.

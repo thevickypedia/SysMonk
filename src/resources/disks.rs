@@ -19,7 +19,7 @@ fn size_converter(byte_size: f64) -> String {
     format!("{:.2} {}", byte_size / 1024.0_f64.powi(index as i32), size_name[index])
 }
 
-/// Function to parse size string.
+/// Function to parse size string for Linux.
 ///
 /// # Arguments
 ///
@@ -50,7 +50,7 @@ fn parse_size(size_str: &str) -> String {
         .replace("P", " PB")
 }
 
-/// Function to check if disk is physical for macOS specific.
+/// Function to check if a disk is physical/virtual for macOS.
 ///
 /// # Arguments
 ///

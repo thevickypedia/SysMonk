@@ -86,7 +86,7 @@ pub fn get_name() -> Option<String> {
         _ => {
             log::error!("Unsupported operating system: {}", os);
             Err("Unsupported operating system")
-        },
+        }
     };
     match result {
         Ok(info) => Some(info),

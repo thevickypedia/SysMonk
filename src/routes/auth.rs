@@ -115,14 +115,13 @@ pub async fn logout(request: HttpRequest,
         cookie.make_removal();
         response.cookie(cookie);
     } else {
-        log::debug!("No stored session found for {}", host);
+        log::debug!("{} - {}", auth_response.detail, host);
         rendered = logout_template.render(minijinja::context!(
                 version => metadata.pkg_version,
                 detail => "You are not logged in. Please click the button below to proceed.",
                 show_login => true
             )).unwrap();
     }
-    // response.finish() is not required since setting the body will close the response
     response.body(rendered)
 }
 
@@ -176,7 +175,6 @@ pub async fn error(request: HttpRequest,
 /// # Returns
 ///
 /// Returns an `HttpResponse` with a redirect, setting a cookie with the failure detail.
-#[allow(dead_code)]
 pub fn failed_auth(auth_response: squire::authenticator::AuthToken) -> HttpResponse {
     let mut response = HttpResponse::build(StatusCode::FOUND);
     let detail = auth_response.detail;

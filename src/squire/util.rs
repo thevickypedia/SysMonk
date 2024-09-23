@@ -108,7 +108,7 @@ pub fn run_command(command: &str, args: &[&str]) -> Result<String, String> {
                 Ok(String::from_utf8_lossy(&output.stdout).trim().to_string())
             } else {
                 let stderr = String::from_utf8_lossy(&output.stderr).to_string();
-                let exit_code = output.status.code().unwrap_or(-1); // Handle exit code
+                let exit_code = output.status.code().unwrap_or(-1);
                 log::error!("Command [{}] failed with exit code: {}", command, exit_code);
                 log::error!("Stderr: {}", stderr);
                 Err(stderr)

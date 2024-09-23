@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use actix_web::{HttpRequest, web};
 use actix_web::http::header::HeaderValue;
+use actix_web::{web, HttpRequest};
 use chrono::Utc;
 use fernet::Fernet;
 
@@ -25,8 +25,6 @@ pub struct AuthToken {
     pub ok: bool,
     pub detail: String,
     pub username: String,
-    #[allow(dead_code)]
-    pub time_left: i64
 }
 
 
@@ -145,7 +143,6 @@ pub fn verify_token(
             ok: false,
             detail: "Server doesn't recognize your session".to_string(),
             username: "NA".to_string(),
-            time_left: 0
         };
     }
     if let Some(cookie) = request.cookie("session_token") {
@@ -162,7 +159,6 @@ pub fn verify_token(
                     ok: false,
                     detail: "Invalid session token".to_string(),
                     username,
-                    time_left: 0
                 };
             }
             if current_time - timestamp > config.session_duration {
@@ -170,7 +166,6 @@ pub fn verify_token(
                     ok: false,
                     detail: "Session Expired".to_string(),
                     username,
-                    time_left: 0
                 };
             }
             let time_left = timestamp + config.session_duration - current_time;
@@ -178,14 +173,12 @@ pub fn verify_token(
                 ok: true,
                 detail: format!("Session valid for {}s", time_left),
                 username,
-                time_left
             }
         } else {
             AuthToken {
                 ok: false,
                 detail: "Invalid session token".to_string(),
                 username: "NA".to_string(),
-                time_left: 0
             }
         }
     } else {
@@ -193,7 +186,6 @@ pub fn verify_token(
             ok: false,
             detail: "Session information not found".to_string(),
             username: "NA".to_string(),
-            time_left: 0
         }
     }
 }
