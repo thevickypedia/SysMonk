@@ -130,9 +130,7 @@ jobs:
 
     name: Upload asset for ${{ matrix.platform.release_for }}
     if: needs.release.outputs.release-flag == 'true'
-    runs-on:
-      - thevickypedia-default
-      - ${{ matrix.platform.os }}
+    runs-on: ${{ matrix.platform.os }}
     permissions:
       contents: write
 

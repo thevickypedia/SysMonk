@@ -1,6 +1,6 @@
 [package]
 name = "SysMonk"
-version = "0.0.0-beta"
+version = "0.0.1"
 description = "Sytem Monitor is a Rust based CLI tool to monitor system resources."
 license = "MIT"
 documentation = "https://docs.rs/SysMonk"
