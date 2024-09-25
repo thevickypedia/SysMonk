@@ -2,6 +2,7 @@ use crate::{constant, resources, routes, squire};
 use actix_web::http::StatusCode;
 use actix_web::{web, HttpRequest, HttpResponse};
 use fernet::Fernet;
+use sysinfo::Disks;
 use std::sync::Arc;
 
 /// Handles the monitor endpoint and rendering the appropriate HTML page.
@@ -34,13 +35,16 @@ pub async fn monitor(request: HttpRequest,
     response.content_type("text/html; charset=utf-8");
     log::debug!("Session Validation Response: {}", auth_response.detail);
 
-    let sys_info_map = resources::info::get_sys_info();
+    // Refresh all disks during startup and re-use it
+    let disks = Disks::new_with_refreshed_list();
+
+    let sys_info_map = resources::info::get_sys_info(&disks);
+    let sys_info_disks = resources::info::get_disks(&disks);
 
     let sys_info_network = resources::network::get_network_info().await;
 
     let sys_info_basic = sys_info_map.get("basic").unwrap();
     let sys_info_mem_storage = sys_info_map.get("mem_storage").unwrap();
-    let sys_info_disks = resources::info::get_disks();
 
     let rendered = monitor_template.render(minijinja::context!(
         version => metadata.pkg_version,

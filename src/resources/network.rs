@@ -86,7 +86,7 @@ pub async fn get_network_info() -> HashMap<&'static str, String> {
     let private_ip = private_ip_address().unwrap_or_default();
     let public_ip = public_ip_address().await.unwrap_or_default();
     HashMap::from([
-        ("Private_IP_Address_raw", private_ip),
-        ("Public_IP_Address_raw", public_ip),
+        ("Private IP address", private_ip),
+        ("Public IP address", public_ip),
     ])
 }

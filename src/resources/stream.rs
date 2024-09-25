@@ -1,9 +1,27 @@
 use std::collections::HashMap;
-use sysinfo::{System, RefreshKind, CpuRefreshKind};
+use sysinfo::{CpuRefreshKind, Disks, RefreshKind, System};
 
+use crate::{squire, resources};
+use serde_json::{self, Value};
 
-use crate::squire;
-use serde_json;
+/// Function to get disk statistics.
+///
+/// # Returns
+///
+/// A `Value` object with total and used disk space.
+pub fn get_disk_stats() -> Value {
+    let disks = Disks::new_with_refreshed_list();
+    let disks_total = resources::info::get_disk_usage(&disks);
+    let mut disk_available: Vec<u64> = [].to_vec();
+    for disk in disks.list() {
+        disk_available.push(disk.available_space());
+    }
+    let disks_available: u64 = disk_available.iter().sum();
+    serde_json::json!({
+        "total": disks_total,
+        "used": disks_total - disks_available,
+    })
+}
 
 /// Function to get docker stats via commandline.
 ///

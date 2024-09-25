@@ -10,9 +10,8 @@ use sysinfo::Disks;
 /// # Returns
 ///
 /// A `u64` value containing the total disk usage.
-pub fn get_disk_usage() -> u64 {
-    let mut disks_space = vec![];
-    let disks = Disks::new_with_refreshed_list();
+pub fn get_disk_usage(disks: &Disks) -> u64 {
+    let mut disks_space: Vec<u64> = vec![];
     for disk in disks.list() {
         disks_space.push(disk.total_space());
     }
@@ -24,23 +23,17 @@ pub fn get_disk_usage() -> u64 {
 /// # Returns
 ///
 /// A `vec` of .
-pub fn get_disks() -> Vec<HashMap<String, String>> {
+pub fn get_disks(disks: &Disks) -> Vec<HashMap<String, String>> {
     let mut disks_info = vec![];
-    let disks = Disks::new_with_refreshed_list();
     for disk in disks.list() {
-        // todo: This is a redundant refresh, perhaps reuse `sys` from `get_sys_info`
-        // todo: Rename this as partitions instead (becuase that's what they are)
-        // todo: Check sysinfo source code for an easy way to get the `Model` information
-        // if disk.name().to_string_lossy().starts_with("/boot") {
-        //     continue;
-        // }
+        // todo: Check sysinfo source code for a way to get the `Model` information
         disks_info.push(
             HashMap::from([
                 ("Name".to_string(), disk.name().to_string_lossy().to_string()),
                 ("Size".to_string(), squire::util::size_converter(disk.total_space()).to_string()),
-                ("Model".to_string(), disk.name().to_string_lossy().to_string()),
+                // ("Model".to_string(), disk.name().to_string_lossy().to_string()),
                 ("Kind".to_string(), disk.file_system().to_string_lossy().to_string()),
-                ("mount_point".to_string(), disk.mount_point().to_string_lossy().to_string()),
+                ("Mount Point".to_string(), disk.mount_point().to_string_lossy().to_string()),
             ])
         );
     }
@@ -86,7 +79,7 @@ fn get_cpu_brand(sys: &System) -> String {
 /// # Returns
 ///
 /// A tuple containing the `SystemInfoBasic` and `SystemInfoMemStorage` structs.
-pub fn get_sys_info() -> HashMap<&'static str, HashMap<&'static str, String>> {
+pub fn get_sys_info(disks: &Disks) -> HashMap<&'static str, HashMap<&'static str, String>> {
     let mut sys = System::new_all();
     sys.refresh_all();
 
@@ -96,26 +89,26 @@ pub fn get_sys_info() -> HashMap<&'static str, HashMap<&'static str, String>> {
     let uptime = squire::util::convert_seconds(uptime_duration);
 
     let total_memory = squire::util::size_converter(sys.total_memory());  // in bytes
-    let total_storage = squire::util::size_converter(get_disk_usage());  // in bytes
+    let total_storage = squire::util::size_converter(get_disk_usage(disks));  // in bytes
 
     // Basic and Memory/Storage Info
     let os_arch = resources::system::os_arch();
     let basic = HashMap::from_iter(vec![
-        ("hostname", System::host_name().unwrap_or("Unknown".to_string())),
-        ("operating_system", squire::util::capwords(&os_arch.name, None)),
-        ("architecture", os_arch.architecture),
-        ("uptime", uptime),
-        ("CPU_cores_raw", sys.cpus().len().to_string()),
-        ("CPU_brand_raw", get_cpu_brand(&sys))
+        ("Hostname", System::host_name().unwrap_or("Unknown".to_string())),
+        ("Operating System", squire::util::capwords(&os_arch.name, None)),
+        ("Architecture", os_arch.architecture),
+        ("Uptime", uptime),
+        ("CPU cores", sys.cpus().len().to_string()),
+        ("CPU brand", get_cpu_brand(&sys))
         ]);
     let mut hash_vec = vec![
-        ("memory", total_memory),
-        ("storage", total_storage)
+        ("Memory", total_memory),
+        ("Storage", total_storage)
     ];
 
     let total_swap = sys.total_swap();  // in bytes
     if total_swap != 0 {
-        hash_vec.push(("swap", squire::util::size_converter(total_swap)));
+        hash_vec.push(("Swap", squire::util::size_converter(total_swap)));
     }
     let mem_storage = HashMap::from_iter(hash_vec);
     HashMap::from_iter(vec![

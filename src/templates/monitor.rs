@@ -197,32 +197,32 @@ pub fn get_content() -> String {
 <h1>SysMonk - System Monitor</h1>
 <div class="center-container">
     <details>
-        <summary><strong>System Information (Basic)</strong></summary>
+        <summary><strong>System Information<strong></summary>
         <br>
         {% for key, value in sys_info_basic|items() %}
-        <strong>{{ key|capwords }}: </strong>{{ value }}<br>
+        <strong>{{ key }}: </strong>{{ value }}<br>
         {% endfor %}
     </details>
     <br>
     <details>
-        <summary><strong>System Information (Memory & Storage)</strong></summary>
+        <summary><strong>Memory and Storage</strong></summary>
         <br>
         {% for key, value in sys_info_mem_storage|items() %}
-        <strong>{{ key|capwords }}: </strong>{{ value }}<br>
+        <strong>{{ key }}: </strong>{{ value }}<br>
         {% endfor %}
     </details>
     <br>
     <details>
-        <summary><strong>System Information (Network)</strong></summary>
+        <summary><strong>Network Information</strong></summary>
         <br>
         {% for key, value in sys_info_network|items() %}
-        <strong>{{ key|capwords }}: </strong>{{ value }}<br>
+        <strong>{{ key }}: </strong>{{ value }}<br>
         {% endfor %}
     </details>
     {% if sys_info_disks %}
     <br>
     <details>
-        <summary><strong>System Information (Disks)</strong></summary>
+        <summary><strong>Partitions</strong></summary>
         {% for disk_info in sys_info_disks %}
         <br>
         {% for key, value in disk_info|items() %}
@@ -240,7 +240,7 @@ pub fn get_content() -> String {
             <!-- CPU Usage will be dynamically added here -->
         </div>
     </div>
-    <!-- Box to display Memory and Swap usage along with CPU load avg -->
+    <!-- Box to display Memory, Swap and Disk usage along with CPU load avg -->
     <div class="box">
         <h3>Memory Usage</h3>
         <div class="progress">
@@ -248,7 +248,7 @@ pub fn get_content() -> String {
         </div>
         <p id="memoryUsageText">Memory: 0%</p>
 
-        {% if 'swap' in sys_info_mem_storage %}
+        {% if 'Swap' in sys_info_mem_storage %}
         <h3>Swap Usage</h3>
         <div class="progress">
             <div id="swapUsage" class="progress-bar"></div>
@@ -256,25 +256,36 @@ pub fn get_content() -> String {
         <p id="swapUsageText">Swap: 0%</p>
         {% endif %}
 
+        <h3>Disk Usage</h3>
+        <div class="progress">
+            <div id="diskUsage" class="progress-bar"></div>
+        </div>
+        <p id="diskUsageText">Disk: 0%</p>
+
         <div class="graph">
             <h3>CPU Load Averages</h3>
             <canvas class="graph-canvas" id="loadChart" width="400" height="200"></canvas>
         </div>
     </div>
-    <!-- Box to display Memory and Swap usage as Pie charts -->
+    <!-- Box to display Memory, Swap and Disk usage as Pie charts -->
     <div class="box">
         <h3>Memory Usage</h3>
         <h5 id="memoryTotal"></h5>
         <div class="chart-container">
             <canvas id="memoryChart"></canvas>
         </div>
-        {% if 'swap' in sys_info_mem_storage %}
+        {% if 'Swap' in sys_info_mem_storage %}
         <h3>Swap Usage</h3>
         <h5 id="swapTotal"></h5>
         <div class="chart-container">
             <canvas id="swapChart"></canvas>
         </div>
         {% endif %}
+        <h3>Disk Usage</h3>
+        <h5 id="diskTotal"></h5>
+        <div class="chart-container">
+            <canvas id="diskChart"></canvas>
+        </div>
     </div>
 </div>
 <div id="docker-stats" class="docker-stats">
@@ -314,6 +325,7 @@ pub fn get_content() -> String {
 
         let memoryChartInstance = null;
         let swapChartInstance = null;
+        let diskChartInstance = null;
         let loadChartInstance = null;
 
         ws.onmessage = function (event) {
@@ -390,6 +402,13 @@ pub fn get_content() -> String {
                 document.getElementById('swapUsageText').innerText = `Swap: ${swapUsage.toFixed(2)}%`;
                 updateProgressBar('swapUsage', swapUsage);
             }
+
+            // Disk Usage Progress Bar
+            const diskInfo = data.disk_info;
+            const diskUsage = (diskInfo.used / diskInfo.total) * 100;
+            document.getElementById('diskUsage').style.width = diskUsage.toFixed(2) + '%';
+            document.getElementById('diskUsageText').innerText = `Disk: ${diskUsage.toFixed(2)}%`;
+            updateProgressBar('diskUsage', diskUsage);
 
             // CPU Load Avg Graph
             const loadAverages = data.load_averages;
@@ -518,6 +537,40 @@ pub fn get_content() -> String {
                 }
             }
 
+            // Disk Chart
+            document.getElementById("diskTotal").innerText = `Total: ${formatBytes(diskInfo.total)}`;
+            if (diskChartInstance) {
+                diskChartInstance.data.datasets[0].data = [diskInfo.used, diskInfo.total - diskInfo.used];
+                diskChartInstance.update();
+            } else {
+                const diskChart = document.getElementById('diskChart').getContext('2d');
+                diskChartInstance = new Chart(diskChart, {
+                    type: 'pie',
+                    data: {
+                        labels: ['Used', 'Free'],
+                        datasets: [{
+                            label: 'Disk Usage',
+                            data: [diskInfo.used, diskInfo.total - diskInfo.used],
+                            backgroundColor: ['#63950d', '#ca7b00']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            tooltip: {
+                                callbacks: {
+                                    label: function (tooltipItem) {
+                                        const value = tooltipItem.raw;
+                                        const formattedValue = formatBytes(value);
+                                        return `${tooltipItem.label}: ${formattedValue}`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
         };
 
         function updateProgressBar(id, percentage) {
@@ -540,11 +593,15 @@ pub fn get_content() -> String {
         }
 
         function formatBytes(bytes) {
-            if (bytes < 1024) return bytes + ' bytes';
-            else if (bytes < 1048576) return (bytes / 1024).toFixed(2) + ' KB';
-            else if (bytes < 1073741824) return (bytes / 1048576).toFixed(2) + ' MB';
-            else return (bytes / 1073741824).toFixed(2) + ' GB';
+            const units = ['bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+            let unitIndex = 0;
+            while (bytes >= 1024 && unitIndex < units.length - 1) {
+                bytes /= 1024;
+                unitIndex++;
+            }
+            return bytes.toFixed(2) + ' ' + units[unitIndex];
         }
+
     });
 
     function logOut() {

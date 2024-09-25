@@ -15,8 +15,10 @@ use std::time::Duration;
 /// * `request` - A reference to the Actix web `HttpRequest` object.
 async fn send_system_resources(request: HttpRequest, mut session: actix_ws::Session) {
     let host = request.connection_info().host().to_string();
+    let disk_stats = resources::stream::get_disk_stats();
     loop {
-        let system_resources = resources::stream::system_resources();
+        let mut system_resources = resources::stream::system_resources();
+        system_resources.insert("disk_info".to_string(), disk_stats.clone());
         let serialized = serde_json::to_string(&system_resources).unwrap();
         match session.text(serialized).await {
             Ok(_) => (),
