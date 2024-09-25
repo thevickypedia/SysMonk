@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use sysinfo::{CpuExt, System, SystemExt};
+use sysinfo::{System, RefreshKind, CpuRefreshKind};
 
 
 use crate::squire;
@@ -50,8 +50,11 @@ fn get_docker_stats() -> Result<Vec<serde_json::Value>, Box<dyn std::error::Erro
 ///
 /// A `Vec` containing the CPU usage percentage of each core.
 fn get_cpu_percent() -> Vec<String> {
-    let mut system = System::new_all();
-    system.refresh_all();
+    let mut system = System::new_with_specifics(
+        RefreshKind::new().with_cpu(CpuRefreshKind::everything()),
+    );
+    std::thread::sleep(sysinfo::MINIMUM_CPU_UPDATE_INTERVAL);
+    system.refresh_cpu_all();
     let mut cpu_usage = Vec::new();
     for core in system.cpus() {
         cpu_usage.push(format!("{:.2}", core.cpu_usage()));
@@ -68,7 +71,7 @@ fn get_system_metrics() -> HashMap<String, serde_json::Value> {
     let mut system = System::new_all();
     system.refresh_all();
 
-    let load_avg = system.load_average();
+    let load_avg = System::load_average();
     let mem_total = system.total_memory();
 
     // used_memory uses "mem_total - mem_free" but memory is set to available instead of free in macOS
