@@ -14,8 +14,12 @@ mod constant;
 mod routes;
 /// Module to store all the helper functions.
 mod squire;
+/// Module to store all the HTML templates rendered using Jinja.
 mod templates;
+/// Module for functions related to system resources.
 mod resources;
+/// Module for deprecated (but still useful for reference) functions
+mod deprecated;
 
 /// Contains entrypoint and initializer settings to trigger the asynchronous `HTTPServer`
 ///

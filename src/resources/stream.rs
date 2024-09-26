@@ -90,15 +90,12 @@ fn get_system_metrics() -> HashMap<String, serde_json::Value> {
     system.refresh_all();
 
     let load_avg = System::load_average();
-    let mem_total = system.total_memory();
-
-    // used_memory uses "mem_total - mem_free" but memory is set to available instead of free in macOS
     let mut hash_vec = vec![
         (
             "memory_info".to_string(),
             serde_json::json!({
-                "total": mem_total,
-                "used": mem_total - system.available_memory(),
+                "total": system.total_memory(),
+                "used": system.used_memory(),
             }),
         ),
         (
