@@ -44,8 +44,8 @@ pub async fn monitor(request: HttpRequest,
     // legacy functions have a mechanism to check for physical devices, so it takes precedence
     let has_name_and_size = !legacy_disk_info.is_empty() &&
         legacy_disk_info.iter().all(|disk| {
-        disk.contains_key("Name") && disk.contains_key("Size")
-    });
+            disk.contains_key("Name") && disk.contains_key("Size")
+        });
     let sys_info_disks = if has_name_and_size {
         log::debug!("Using legacy methods for disks!");
         legacy_disk_info

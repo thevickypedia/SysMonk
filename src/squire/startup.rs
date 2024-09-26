@@ -1,10 +1,10 @@
 use std;
 use std::io::Write;
 
-use chrono::{DateTime, Local};
-
 use crate::squire::settings;
 use crate::{constant, squire};
+use chrono::{DateTime, Local};
+use regex::Regex;
 
 /// Initializes the logger based on the provided debug flag and cargo information.
 ///
@@ -238,6 +238,78 @@ fn load_env_vars() -> settings::Config {
     }
 }
 
+/// Verifies the strength of a password string.
+///
+/// A secret is considered strong if it meets the following conditions:
+/// - At least 32 characters long
+/// - Contains at least one digit
+/// - Contains at least one uppercase letter
+/// - Contains at least one lowercase letter
+/// - Contains at least one special character
+///
+/// # Arguments
+///
+/// * `password` - A reference to a string slice (`&str`) that represents the password to check.
+///
+/// # Returns
+///
+/// This function returns a `Result<(), String>`.
+/// - `Ok(())` is returned if all conditions are met.
+/// - `Err(String)` is returned with an error message if any condition fails.
+pub fn complexity_checker(password: &str) -> Result<(), String> {
+    let mock_password = "*".repeat(password.len());
+
+    // Check minimum length
+    if password.len() < 8 {
+        return Err(
+            format!(
+                "\npassword\n\t[{}] password must be at least 8 or more characters [value=invalid]\n", mock_password
+            )
+        );
+    }
+
+    // Check for at least one digit
+    let has_digit = Regex::new(r"\d").unwrap();
+    if !has_digit.is_match(password) {
+        return Err(
+            format!(
+                "\npassword\n\t[{}] password must include at least one digit [value=invalid]\n", mock_password
+            )
+        );
+    }
+
+    // Check for at least one uppercase letter
+    let has_uppercase = Regex::new(r"[A-Z]").unwrap();
+    if !has_uppercase.is_match(password) {
+        return Err(
+            format!(
+                "\npassword\n\t[{}] password must include at least one uppercase letter [value=invalid]\n", mock_password
+            )
+        );
+    }
+
+    // Check for at least one lowercase letter
+    let has_lowercase = Regex::new(r"[a-z]").unwrap();
+    if !has_lowercase.is_match(password) {
+        return Err(
+            format!(
+                "\npassword\n\t[{}] password must include at least one lowercase letter [value=invalid]\n", mock_password
+            )
+        );
+    }
+
+    // Check for at least one special character
+    let has_special_char = Regex::new(r###"[ !#$%&'()*+,./:;<=>?@\\^_`{|}~"-]"###).unwrap();
+    if !has_special_char.is_match(password) {
+        return Err(
+            format!(
+                "\npassword\n\t[{}] password must contain at least one special character [value=invalid]\n", mock_password
+            )
+        );
+    }
+    Ok(())
+}
+
 /// Validates all the required environment variables with the required settings.
 ///
 /// # Returns
@@ -253,12 +325,11 @@ fn validate_vars() -> settings::Config {
         );
         errors.push_str(&err1);
     }
-    if config.password.len() < 8 {
-        let err2 = format!(
-            "\npassword\n\t[{}] password should be at least 8 or more characters [value=invalid]\n",
-            "*".repeat(config.password.len())
-        );
-        errors.push_str(&err2);
+    match complexity_checker(&config.password) {
+        Ok(_) => (),
+        Err(err) => {
+            errors.push_str(&err);
+        }
     }
     if !errors.is_empty() {
         panic!("{}", errors);

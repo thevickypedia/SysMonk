@@ -103,6 +103,20 @@ jobs:
           echo "release_id=$release_id" >> "$GITHUB_OUTPUT"
         shell: bash
 
+  build-and-test:
+    needs: release
+    if: needs.release.outputs.release-flag == 'false'
+    runs-on:
+      - thevickypedia-lite
+      - posix
+    steps:
+      - name: Build (no release)
+        run: cargo build
+        shell: bash
+      - name: Test (no release)
+        run: cargo test --no-run
+        shell: bash
+
   upload_assets:
     needs: release
     strategy:

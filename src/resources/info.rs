@@ -26,12 +26,10 @@ pub fn get_disk_usage(disks: &Disks) -> u64 {
 pub fn get_disks(disks: &Disks) -> Vec<HashMap<String, String>> {
     let mut disks_info = vec![];
     for disk in disks.list() {
-        // todo: Check sysinfo source code for a way to get the `Model` information
         disks_info.push(
             HashMap::from([
                 ("Name".to_string(), disk.name().to_string_lossy().to_string()),
                 ("Size".to_string(), squire::util::size_converter(disk.total_space()).to_string()),
-                // ("Model".to_string(), disk.name().to_string_lossy().to_string()),
                 ("Kind".to_string(), disk.file_system().to_string_lossy().to_string()),
                 ("Mount Point".to_string(), disk.mount_point().to_string_lossy().to_string()),
             ])
