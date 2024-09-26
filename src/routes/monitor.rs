@@ -41,10 +41,16 @@ pub async fn monitor(request: HttpRequest,
     let sys_info_map = resources::info::get_sys_info(&disks);
     let legacy_disk_info = legacy::disks::get_all_disks();
 
-    let sys_info_disks = if legacy_disk_info.is_empty() {
-        resources::info::get_disks(&disks)
-    } else {
+    // legacy functions have a mechanism to check for physical devices, so it takes precedence
+    let has_name_and_size = !legacy_disk_info.is_empty() &&
+        legacy_disk_info.iter().all(|disk| {
+        disk.contains_key("Name") && disk.contains_key("Size")
+    });
+    let sys_info_disks = if has_name_and_size {
+        log::debug!("Using legacy methods for disks!");
         legacy_disk_info
+    } else {
+        resources::info::get_disks(&disks)
     };
 
     let sys_info_network = resources::network::get_network_info().await;

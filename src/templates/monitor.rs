@@ -197,7 +197,7 @@ pub fn get_content() -> String {
 <h1>SysMonk - System Monitor</h1>
 <div class="center-container">
     <details>
-        <summary><strong>System Information<strong></summary>
+        <summary><strong>System Information</strong></summary>
         <br>
         {% for key, value in sys_info_basic|items() %}
         <strong>{{ key }}: </strong>{{ value }}<br>

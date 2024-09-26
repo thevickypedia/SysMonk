@@ -104,7 +104,6 @@ pub fn run_command(command: &str, args: &[&str]) -> Result<String, String> {
     {
         Ok(output) => {
             if output.status.success() {
-                log::debug!("Command [{}] executed successfully", &command);
                 Ok(String::from_utf8_lossy(&output.stdout).trim().to_string())
             } else {
                 let stderr = String::from_utf8_lossy(&output.stderr).to_string();

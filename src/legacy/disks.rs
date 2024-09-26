@@ -3,7 +3,7 @@ use serde_json::Value;
 use std::collections::HashMap;
 use std::str;
 
-use crate::legacy::helper::{run_command, size_converter};
+use crate::squire;
 
 /// Function to parse size string for Linux.
 ///
@@ -27,7 +27,7 @@ fn parse_size(size_str: &str) -> String {
             ("P", 2_f64.powi(50)),
         ]);
         let multiplier = unit_multipliers.get(unit).unwrap_or(&1.0);
-        return size_converter((value * multiplier) as u64);
+        return squire::util::size_converter((value * multiplier) as u64);
     }
     size_str.replace("K", " KB")
         .replace("M", " MB")
@@ -47,7 +47,7 @@ fn parse_size(size_str: &str) -> String {
 ///
 /// A `bool` indicating if the disk is physical.
 fn is_physical_disk(lib_path: &str, device_id: &str) -> bool {
-    let result = run_command(lib_path, &["info", device_id]);
+    let result = squire::util::run_command(lib_path, &["info", device_id]);
     let output = match result {
         Ok(output) => output,
         Err(_) => {
@@ -73,7 +73,7 @@ fn is_physical_disk(lib_path: &str, device_id: &str) -> bool {
 ///
 /// A `Vec` of `HashMap` containing the disk information.
 fn linux_disks(lib_path: &str) -> Vec<HashMap<String, String>> {
-    let result = run_command(lib_path, &["-o", "NAME,SIZE,TYPE,MODEL", "-d"]);
+    let result = squire::util::run_command(lib_path, &["-o", "NAME,SIZE,TYPE,MODEL", "-d"]);
     let output = match result {
         Ok(output) => output,
         Err(_) => {
@@ -112,7 +112,7 @@ fn linux_disks(lib_path: &str) -> Vec<HashMap<String, String>> {
 ///
 /// A `Vec` of `HashMap` containing the disk information.
 fn darwin_disks(lib_path: &str) -> Vec<HashMap<String, String>> {
-    let result = run_command(lib_path, &["list"]);
+    let result = squire::util::run_command(lib_path, &["list"]);
     let output = match result {
         Ok(output) => output,
         Err(_) => {
@@ -128,7 +128,7 @@ fn darwin_disks(lib_path: &str) -> Vec<HashMap<String, String>> {
         if !is_physical_disk(lib_path, device_id) {
             continue;
         }
-        let result = run_command(lib_path, &["info", device_id]);
+        let result = squire::util::run_command(lib_path, &["info", device_id]);
         let disk_info_output = match result {
             Ok(output) => output,
             Err(_) => {
@@ -166,7 +166,7 @@ fn reformat_windows(data: &mut HashMap<String, Value>) -> HashMap<String, String
     let size = data.get("Size").unwrap().as_f64().unwrap();
     let model = data.get("Model").unwrap().as_str().unwrap().to_string();
     let mut reformatted_data = HashMap::new();
-    reformatted_data.insert("Size".to_string(), size_converter(size as u64));
+    reformatted_data.insert("Size".to_string(), squire::util::size_converter(size as u64));
     reformatted_data.insert("Name".to_string(), model);
     reformatted_data.insert("DeviceID".to_string(), data.get("DeviceID").unwrap().as_str().unwrap().to_string());
     reformatted_data
@@ -183,7 +183,7 @@ fn reformat_windows(data: &mut HashMap<String, Value>) -> HashMap<String, String
 /// A `Vec` of `HashMap` containing the disk information.
 fn windows_disks(lib_path: &str) -> Vec<HashMap<String, String>> {
     let ps_command = "Get-CimInstance Win32_DiskDrive | Select-Object Caption, DeviceID, Model, Partitions, Size | ConvertTo-Json";
-    let result = run_command(lib_path, &["-Command", ps_command]);
+    let result = squire::util::run_command(lib_path, &["-Command", ps_command]);
     let output = match result {
         Ok(output) => output,
         Err(_) => {

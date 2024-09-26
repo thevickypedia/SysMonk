@@ -36,22 +36,22 @@ async fn main() {
 <details>
 <summary><strong>Download OS specific Executable</strong></summary>
 
-###### macOS
+###### macOS (x86_64)
 ```shell
 curl -o SysMonk-Darwin-x86_64.tar.gz -LH "Accept: application/octet-stream" "https://github.com/thevickypedia/SysMonk/releases/latest/download/SysMonk-Darwin-x86_64.tar.gz"
 ```
 
-###### Linux
+###### macOS (arm64)
+```shell
+curl -o SysMonk-Darwin-arm64.tar.gz -LH "Accept: application/octet-stream" "https://github.com/thevickypedia/SysMonk/releases/latest/download/SysMonk-Darwin-arm64.tar.gz"
+```
+
+###### Linux (x86_64)
 ```shell
 curl -o SysMonk-Linux-x86_64.tar.gz -LH "Accept: application/octet-stream" "https://github.com/thevickypedia/SysMonk/releases/latest/download/SysMonk-Linux-x86_64.tar.gz"
 ```
 
-###### RaspberryPi
-```shell
-curl -o SysMonk-RaspberryPi.tar.gz -LH "Accept: application/octet-stream" "https://github.com/thevickypedia/SysMonk/releases/latest/download/SysMonk-RaspberryPi.tar.gz"
-```
-
-###### Windows
+###### Windows (x86_64)
 ```shell
 curl -o SysMonk-Windows-x86_64.zip -LH "Accept: application/octet-stream" "https://github.com/thevickypedia/SysMonk/releases/latest/download/SysMonk-Windows-x86_64.zip"
 ```

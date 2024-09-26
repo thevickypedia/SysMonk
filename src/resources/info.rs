@@ -56,11 +56,12 @@ fn get_cpu_brand(sys: &System) -> String {
         cpu_brands.insert(cpu.brand().to_string());
     }
     if cpu_brands.is_empty() {
-        log::warn!("Unable to get brand information for all {} CPUs", cpus.len());
         let legacy_cpu_brand_name = legacy::cpu_brand::get_name();
         return if let Some(cpu_brand) = legacy_cpu_brand_name {
+            log::debug!("Using legacy methods for CPU brand!!");
             cpu_brand
         } else {
+            log::error!("Unable to get brand information for all {} CPUs", cpus.len());
             "Unknown".to_string()
         };
     }

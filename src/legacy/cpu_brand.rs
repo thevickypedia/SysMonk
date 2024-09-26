@@ -1,7 +1,7 @@
 use std::fs::File;
 use std::io::{self, BufRead};
 
-use crate::legacy::helper::run_command;
+use crate::squire;
 
 /// Function to get processor information.
 ///
@@ -13,7 +13,7 @@ use crate::legacy::helper::run_command;
 ///
 /// A `Option` containing the processor information if successful, otherwise `None`.
 fn get_processor_info_darwin(lib_path: &str) -> Result<String, &'static str> {
-    let result = run_command(lib_path, &["-n", "machdep.cpu.brand_string"]);
+    let result = squire::util::run_command(lib_path, &["-n", "machdep.cpu.brand_string"]);
     if result.is_err() {
         return Err("Failed to get processor info");
     }
@@ -60,7 +60,7 @@ fn get_processor_info_linux(lib_path: &str) -> Result<String, &'static str> {
 ///
 /// A `Option` containing the processor information if successful, otherwise `None`.
 fn get_processor_info_windows(lib_path: &str) -> Result<String, &'static str> {
-    let result = run_command(lib_path, &["cpu", "get", "name"]);
+    let result = squire::util::run_command(lib_path, &["cpu", "get", "name"]);
     let output = match result {
         Ok(output) => output,
         Err(_) => return Err("Failed to get processor info"),

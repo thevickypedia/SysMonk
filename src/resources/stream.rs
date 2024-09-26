@@ -47,7 +47,6 @@ fn get_docker_stats() -> Result<Vec<serde_json::Value>, Box<dyn std::error::Erro
             }
         }
         Ok(_) => {
-            log::debug!("No running containers");
             return Ok(vec![]);
         }
         Err(err) => {

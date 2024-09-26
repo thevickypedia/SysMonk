@@ -109,17 +109,17 @@ jobs:
       matrix:
         platform:
           - release_for: Linux-x86_64
-            os: linux-amd64
+            os: linux-x64
             bin: ${{ needs.release.outputs.bin-name }}
             name: ${{ needs.release.outputs.pkg-name }}-Linux-x86_64.tar.gz
 
           - release_for: Windows-x86_64
-            os: windows-amd64
+            os: windows-x64
             bin: ${{ needs.release.outputs.bin-name }}.exe
             name: ${{ needs.release.outputs.pkg-name }}-Windows-x86_64.zip
 
           - release_for: macOS-x86_64
-            os: darwin-amd64
+            os: darwin-x64
             bin: ${{ needs.release.outputs.bin-name }}
             name: ${{ needs.release.outputs.pkg-name }}-Darwin-x86_64.tar.gz
 
@@ -155,7 +155,6 @@ jobs:
           printf '*%.0s' {1..60} && printf "\n"
           echo "Existing rust version: $(rustc --version)"
           printf '*%.0s' {1..60} && printf "\n\n"
-          rustup update && printf "\n"
           rustup default 1.81.0 && printf "\n"
           printf '*%.0s' {1..60} && printf "\n"
           echo "Updated rust version: $(rustc --version)"
@@ -250,7 +249,6 @@ jobs:
           printf '*%.0s' {1..60} && printf "\n"
           echo "Existing rust version: $(rustc --version)"
           printf '*%.0s' {1..60} && printf "\n\n"
-          rustup update && printf "\n"
           rustup default 1.81.0 && printf "\n"
           printf '*%.0s' {1..60} && printf "\n"
           echo "Updated rust version: $(rustc --version)"
