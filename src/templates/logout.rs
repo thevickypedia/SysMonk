@@ -49,9 +49,10 @@ pub fn get_content() -> String {
 
         footer {
             width: 100%;
+            color: #fff;
             text-align: center;
-            align-content: center
-            font-size: 10px;
+            align-content: center;
+            font-size: 14px;
             font-style: italic;
         }
     </style>

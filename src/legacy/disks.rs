@@ -81,25 +81,25 @@ fn linux_disks(lib_path: &str) -> Vec<HashMap<String, String>> {
             return Vec::new();
         }
     };
-    let disks: Vec<&str> = output.lines().collect();
-    let filtered_disks: Vec<&str> = disks.into_iter().filter(|&disk| !disk.contains("loop")).collect();
-    let keys_raw = filtered_disks[0].to_lowercase()
-        .replace("name", "DeviceID")
-        .replace("model", "Name")
-        .replace("size", "Size");
-    let keys: Vec<&str> = keys_raw.split_whitespace().collect();
-    let mut disk_info = Vec::new();
-    for line in &filtered_disks[1..] {
-        let values: Vec<&str> = line.split_whitespace().collect();
-        let mut disk_map = HashMap::new();
-        for (key, value) in keys.iter().zip(values.iter()) {
-            disk_map.insert(key.to_string(), value.to_string());
+    // Skip the header line
+    let disks_skipped: Vec<&str> = output.lines().skip(1).collect();
+    let filtered_disks: Vec<&str> = disks_skipped.into_iter().filter(|&disk| !disk.contains("loop")).collect();
+    let mut disk_list = Vec::new();
+    for disk in filtered_disks {
+        // Split the disk info by whitespace and collect each part
+        let parts: Vec<&str> = disk.split_whitespace().collect();
+        // Ensure the disk info has at least 4 parts (NAME, SIZE, TYPE, MODEL)
+        if parts.len() >= 4 {
+            let disk_info = HashMap::from([
+                ("Name".to_string(), parts[0].to_string()),
+                ("Size".to_string(), parse_size(parts[1])),
+                ("Type".to_string(), parts[2].to_string()),
+                ("Model".to_string(), parts[3..].join(" ")),
+            ]);
+            disk_list.push(disk_info);
         }
-        disk_map.insert("Size".to_string(), parse_size(disk_map.get("Size").unwrap()));
-        disk_map.remove("type");
-        disk_info.push(disk_map);
     }
-    disk_info
+    disk_list
 }
 
 /// Function to get disk information on macOS.

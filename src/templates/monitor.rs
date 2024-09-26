@@ -162,8 +162,8 @@ pub fn get_content() -> String {
         footer {
             width: 100%;
             text-align: center;
-            align-content: center
-            font-size: 10px;
+            align-content: center;
+            font-size: 14px;
             font-style: italic;
         }
 
@@ -222,7 +222,7 @@ pub fn get_content() -> String {
     {% if sys_info_disks %}
     <br>
     <details>
-        <summary><strong>Partitions</strong></summary>
+        <summary><strong>Disk Information</strong></summary>
         {% for disk_info in sys_info_disks %}
         <br>
         {% for key, value in disk_info|items() %}
