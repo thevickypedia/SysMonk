@@ -8,7 +8,7 @@
 [![none-shall-pass][nsp-logo]][nsp]
 
 #### Summary
-[`SysMonk`][repo] is a system monitoring tool that provides a simple and easy-to-use interface to monitor system resources. It is designed to be lightweight and fast.
+[`SysMonk`][repo] is a highly efficient, lightweight API for resource monitoring that uses WebSockets for real-time streaming.
 
 ### Installation
 

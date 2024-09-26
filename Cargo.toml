@@ -1,16 +1,16 @@
 [package]
 name = "SysMonk"
 version = "0.0.1"
-description = "Sytem Monitor is a Rust based CLI tool to monitor system resources."
+description = "SysMonk is a highly efficient, lightweight API for resource monitoring that uses WebSockets for real-time streaming."
 license = "MIT"
 documentation = "https://docs.rs/SysMonk"
 homepage = "https://github.com/thevickypedia/SysMonk"
 repository = "https://github.com/thevickypedia/SysMonk"
 rust-version = "1.81.0"
-keywords = ["asynchronous-server", "SysMonk", "cli-tool", "system-resources"]
-categories = ["web-programming::http-server", "asynchronous", "algorithms", "authentication"]
-include = ["/src", "LICENSE"]
-exclude = [".github", ".gitignore", "README.md"]
+keywords = ["asynchronous-server", "SysMonk", "system-resources", "monitoring", "websockets"]
+categories = ["web-programming::http-server", "web-programming::websocket", "asynchronous", "algorithms", "authentication"]
+include = ["/src", "LICENSE", "README.md"]
+exclude = [".github", ".gitignore"]
 edition = "2021"
 authors = ["Vignesh Rao"]
 
@@ -30,9 +30,7 @@ actix = "0.13.5"
 actix-rt = "2.10.0"
 actix-web = { version = "4.9.0", features = ["openssl"] }
 actix-ws = "0.3.0"
-actix-files = "0.6.6"
 actix-cors = "0.7.0"
-actix-multipart = "0.7.2"
 serde = { version = "1.0.210", features = ["derive"] }
 serde_json = "1.0.128"
 chrono = { version = "0.4.38", features = ["serde"] }
