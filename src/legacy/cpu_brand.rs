@@ -1,7 +1,7 @@
 use std::fs::File;
 use std::io::{self, BufRead};
 
-use crate::deprecated::helper::run_command;
+use crate::legacy::helper::run_command;
 
 /// Function to get processor information.
 ///
@@ -81,7 +81,7 @@ fn get_processor_info_windows(lib_path: &str) -> Result<String, &'static str> {
 pub fn get_name() -> Option<String> {
     let operating_system = std::env::consts::OS;
     let result = match operating_system {
-        "darwin" => get_processor_info_darwin("/usr/sbin/sysctl"),
+        "macos" => get_processor_info_darwin("/usr/sbin/sysctl"),
         "linux" => get_processor_info_linux("/proc/cpuinfo"),
         "windows" => get_processor_info_windows("C:\\Windows\\System32\\wbem\\wmic.exe"),
         _ => {

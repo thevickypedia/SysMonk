@@ -18,8 +18,8 @@ mod squire;
 mod templates;
 /// Module for functions related to system resources.
 mod resources;
-/// Module for deprecated (but still useful for reference) functions
-mod deprecated;
+/// Module for legacy (but still useful for reference) functions
+mod legacy;
 
 /// Contains entrypoint and initializer settings to trigger the asynchronous `HTTPServer`
 ///

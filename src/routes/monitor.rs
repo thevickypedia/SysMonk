@@ -1,9 +1,9 @@
-use crate::{constant, resources, routes, squire};
+use crate::{constant, legacy, resources, routes, squire};
 use actix_web::http::StatusCode;
 use actix_web::{web, HttpRequest, HttpResponse};
 use fernet::Fernet;
-use sysinfo::Disks;
 use std::sync::Arc;
+use sysinfo::Disks;
 
 /// Handles the monitor endpoint and rendering the appropriate HTML page.
 ///
@@ -39,7 +39,13 @@ pub async fn monitor(request: HttpRequest,
     let disks = Disks::new_with_refreshed_list();
 
     let sys_info_map = resources::info::get_sys_info(&disks);
-    let sys_info_disks = resources::info::get_disks(&disks);
+    let legacy_disk_info = legacy::disks::get_all_disks();
+
+    let sys_info_disks = if legacy_disk_info.is_empty() {
+        resources::info::get_disks(&disks)
+    } else {
+        legacy_disk_info
+    };
 
     let sys_info_network = resources::network::get_network_info().await;
 

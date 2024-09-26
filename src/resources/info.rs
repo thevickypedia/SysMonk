@@ -1,4 +1,4 @@
-use crate::{resources, squire};
+use crate::{resources, squire, legacy};
 use chrono::Utc;
 use std::collections::HashMap;
 use std::collections::HashSet;
@@ -56,8 +56,13 @@ fn get_cpu_brand(sys: &System) -> String {
         cpu_brands.insert(cpu.brand().to_string());
     }
     if cpu_brands.is_empty() {
-        log::error!("Unable to get brand information for all {} CPUs", cpus.len());
-        return "Unknown".to_string()
+        log::warn!("Unable to get brand information for all {} CPUs", cpus.len());
+        let legacy_cpu_brand_name = legacy::cpu_brand::get_name();
+        return if legacy_cpu_brand_name.is_some() {
+            legacy_cpu_brand_name.unwrap()
+        } else {
+            "Unknown".to_string()
+        }
     }
     let mut cpu_brand_list: Vec<String> = cpu_brands.into_iter().collect();
     cpu_brand_list.sort_by_key(|brand| brand.len());

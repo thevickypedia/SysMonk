@@ -3,7 +3,7 @@ use std::str;
 use regex::Regex;
 use serde_json::Value;
 
-use crate::deprecated::helper::{run_command, size_converter};
+use crate::legacy::helper::{run_command, size_converter};
 
 /// Function to parse size string for Linux.
 ///
