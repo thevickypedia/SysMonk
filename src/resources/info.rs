@@ -1,9 +1,9 @@
-use crate::{resources, squire, legacy};
+use crate::{legacy, resources, squire};
 use chrono::Utc;
 use std::collections::HashMap;
 use std::collections::HashSet;
-use sysinfo::System;
 use sysinfo::Disks;
+use sysinfo::System;
 
 /// Function to get total disk usage.
 ///
@@ -58,11 +58,11 @@ fn get_cpu_brand(sys: &System) -> String {
     if cpu_brands.is_empty() {
         log::warn!("Unable to get brand information for all {} CPUs", cpus.len());
         let legacy_cpu_brand_name = legacy::cpu_brand::get_name();
-        return if legacy_cpu_brand_name.is_some() {
-            legacy_cpu_brand_name.unwrap()
+        return if let Some(cpu_brand) = legacy_cpu_brand_name {
+            cpu_brand
         } else {
             "Unknown".to_string()
-        }
+        };
     }
     let mut cpu_brand_list: Vec<String> = cpu_brands.into_iter().collect();
     cpu_brand_list.sort_by_key(|brand| brand.len());
@@ -105,7 +105,7 @@ pub fn get_sys_info(disks: &Disks) -> HashMap<&'static str, HashMap<&'static str
         ("Uptime", uptime),
         ("CPU cores", sys.cpus().len().to_string()),
         ("CPU brand", get_cpu_brand(&sys))
-        ]);
+    ]);
     let mut hash_vec = vec![
         ("Memory", total_memory),
         ("Storage", total_storage)

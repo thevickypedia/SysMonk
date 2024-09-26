@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use sysinfo::{CpuRefreshKind, Disks, RefreshKind, System};
 
-use crate::{squire, resources};
+use crate::{resources, squire};
 use serde_json::{self, Value};
 
 /// Function to get disk statistics.

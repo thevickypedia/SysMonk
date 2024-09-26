@@ -1,7 +1,7 @@
-use std::collections::HashMap;
-use std::str;
 use regex::Regex;
 use serde_json::Value;
+use std::collections::HashMap;
+use std::str;
 
 use crate::legacy::helper::{run_command, size_converter};
 
@@ -53,7 +53,7 @@ fn is_physical_disk(lib_path: &str, device_id: &str) -> bool {
         Err(_) => {
             log::error!("Failed to get disk info");
             return false;
-        },
+        }
     };
     for line in output.split("\n") {
         if line.contains("Virtual:") && line.contains("Yes") {
@@ -79,7 +79,7 @@ fn linux_disks(lib_path: &str) -> Vec<HashMap<String, String>> {
         Err(_) => {
             log::error!("Failed to get disk info");
             return Vec::new();
-        },
+        }
     };
     let disks: Vec<&str> = output.lines().collect();
     let filtered_disks: Vec<&str> = disks.into_iter().filter(|&disk| !disk.contains("loop")).collect();
@@ -118,7 +118,7 @@ fn darwin_disks(lib_path: &str) -> Vec<HashMap<String, String>> {
         Err(_) => {
             log::error!("Failed to get disk info");
             return Vec::new();
-        },
+        }
     };
     let disks: Vec<&str> = output.lines().collect();
     let disk_lines: Vec<&str> = disks.into_iter().filter(|&line| line.starts_with("/dev/disk")).collect();
@@ -134,7 +134,7 @@ fn darwin_disks(lib_path: &str) -> Vec<HashMap<String, String>> {
             Err(_) => {
                 log::error!("Failed to get disk info");
                 return Vec::new();
-            },
+            }
         };
         let info_lines: Vec<&str> = disk_info_output.lines().collect();
         let mut disk_data = HashMap::new();
@@ -189,7 +189,7 @@ fn windows_disks(lib_path: &str) -> Vec<HashMap<String, String>> {
         Err(_) => {
             log::error!("Failed to get disk info");
             return Vec::new();
-        },
+        }
     };
     let disks_info: Value = serde_json::from_str(&output).unwrap();
     let mut disk_info = Vec::new();

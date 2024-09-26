@@ -1,6 +1,6 @@
 use regex::Regex;
-use std::process::Command;
 use std::collections::HashMap;
+use std::process::Command;
 
 /// Function to retrieve the REGEX object for an IPv4 address format
 ///
@@ -27,8 +27,8 @@ pub fn public_ip_mapping() -> HashMap<String, bool> {
         ("https://httpbin.org/ip".to_string(), false),        // expects JSON
         ("https://myip.dnsomatic.com/".to_string(), true),    // expects text
     ]
-    .into_iter()
-    .collect();
+        .into_iter()
+        .collect();
     mapping
 }
 

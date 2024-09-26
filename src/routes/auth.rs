@@ -1,9 +1,9 @@
 use std::sync::Arc;
 
-use actix_web::{HttpRequest, HttpResponse, web};
-use actix_web::cookie::{Cookie, SameSite};
 use actix_web::cookie::time::{Duration, OffsetDateTime};
+use actix_web::cookie::{Cookie, SameSite};
 use actix_web::http::StatusCode;
+use actix_web::{web, HttpRequest, HttpResponse};
 use fernet::Fernet;
 use minijinja;
 use serde::Serialize;
