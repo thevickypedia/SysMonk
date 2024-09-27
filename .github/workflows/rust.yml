@@ -105,6 +105,7 @@ jobs:
   build-and-test:
     needs: release
     if: needs.release.outputs.release-flag == 'false'
+    # Unix like systems don't require additional OpenSSL configuration like Windows, so build
     runs-on:
       - thevickypedia-lite
       - posix
@@ -112,36 +113,36 @@ jobs:
       - name: Build (no release)
         run: cargo build
         shell: bash
-      - name: Test (no release)
+      - name: Run tests (no release)
         run: cargo test --no-run
         shell: bash
 
-  upload_assets:
+  build-and-upload-artifact:
     needs: release
     strategy:
       matrix:
         platform:
-          # - release_for: Linux-x86_64
-          #   os: linux-x64
-          #   bin: ${{ needs.release.outputs.bin-name }}
-          #   name: ${{ needs.release.outputs.pkg-name }}-Linux-x86_64.tar.gz
+          - release_for: Linux-x86_64
+            os: linux-x64
+            bin: ${{ needs.release.outputs.bin-name }}
+            name: ${{ needs.release.outputs.pkg-name }}-Linux-x86_64.tar.gz
 
           - release_for: Windows-x86_64
             os: windows-x64
             bin: ${{ needs.release.outputs.bin-name }}.exe
             name: ${{ needs.release.outputs.pkg-name }}-Windows-x86_64.zip
 
-          # - release_for: macOS-x86_64
-          #   os: darwin-x64
-          #   bin: ${{ needs.release.outputs.bin-name }}
-          #   name: ${{ needs.release.outputs.pkg-name }}-Darwin-x86_64.tar.gz
+          - release_for: macOS-x86_64
+            os: darwin-x64
+            bin: ${{ needs.release.outputs.bin-name }}
+            name: ${{ needs.release.outputs.pkg-name }}-Darwin-x86_64.tar.gz
 
-          # - release_for: macOS-arm64
-          #   os: darwin-arm64
-          #   bin: ${{ needs.release.outputs.bin-name }}
-          #   name: ${{ needs.release.outputs.pkg-name }}-Darwin-arm64.tar.gz
+          - release_for: macOS-arm64
+            os: darwin-arm64
+            bin: ${{ needs.release.outputs.bin-name }}
+            name: ${{ needs.release.outputs.pkg-name }}-Darwin-arm64.tar.gz
 
-    name: Upload asset for ${{ matrix.platform.release_for }}
+    name: Build and upload artifact for ${{ matrix.platform.release_for }}
     if: needs.release.outputs.release-flag == 'true'
     runs-on: ${{ matrix.platform.os }}
     permissions:
@@ -179,12 +180,9 @@ jobs:
         run: |
           $VCPKG_DIR = "$env:USERPROFILE\Tools\vcpkg"
           $VCPKG_ROOT = "$VCPKG_DIR\installed\x64-windows-static"
-          $OPENSSL_DIR = "$VCPKG_DIR\installed\x64-windows-static"
           if (Test-Path $VCPKG_ROOT) {
-            if (Test-Path $OPENSSL_DIR) {
-              Write-Host "::notice title=VCPKG Installation::Re-using existing vcpkg"
-              Add-Content -Path $env:GITHUB_ENV -Value ("vcpkg_dir=" + $VCPKG_DIR)
-            } 
+            Write-Host "::notice title=VCPKG Installation::Installed vcpkg found at '$VCPKG_DIR'"
+            Add-Content -Path $env:GITHUB_ENV -Value ("vcpkg_dir=" + $VCPKG_DIR)
           } else {
             Write-Host "::notice title=VCPKG Installation::Installing fresh copy of vcpkg"
             Add-Content -Path $env:GITHUB_ENV -Value "install_vcpkg=true"
@@ -214,9 +212,9 @@ jobs:
         run: |
           if [[ "${{ matrix.platform.os }}" =~ ^windows ]]; then
             echo "Setting vcpkg env vars for OpenSSL in Windows"
-            export OPENSSL_DIR="${{ env.vcpkg_dir }}\installed\x64-windows-static"
             export OPENSSL_STATIC="Yes"
             export VCPKG_ROOT="${{ env.vcpkg_dir }}\installed\x64-windows-static"
+            export OPENSSL_DIR="${{ env.vcpkg_dir }}\installed\x64-windows-static"
           fi
           cargo build --release
         shell: bash
@@ -225,9 +223,9 @@ jobs:
         run: |
           if [[ "${{ matrix.platform.os }}" =~ ^windows ]]; then
             echo "Setting vcpkg env vars for OpenSSL in Windows"
-            export OPENSSL_DIR="${{ env.vcpkg_dir }}\installed\x64-windows-static"
             export OPENSSL_STATIC="Yes"
             export VCPKG_ROOT="${{ env.vcpkg_dir }}\installed\x64-windows-static"
+            export OPENSSL_DIR="${{ env.vcpkg_dir }}\installed\x64-windows-static"
           fi
           cargo test --no-run
         shell: bash
@@ -266,26 +264,26 @@ jobs:
           echo "🚀 Built for $hyperlink in $time_taken seconds" >> $GITHUB_STEP_SUMMARY
         shell: bash
 
-  # publish-crate:
-  #   needs:
-  #     - release
-  #     - upload_assets
-  #   if: needs.release.outputs.release-flag == 'true'
-  #   runs-on: thevickypedia-lite
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - name: Update Rust
-  #       run: |
-  #         printf '*%.0s' {1..60} && printf "\n"
-  #         echo "Existing rust version: $(rustc --version)"
-  #         printf '*%.0s' {1..60} && printf "\n\n"
-  #         rustup default 1.81.0 && printf "\n"
-  #         printf '*%.0s' {1..60} && printf "\n"
-  #         echo "Updated rust version: $(rustc --version)"
-  #         printf '*%.0s' {1..60} && printf "\n"
-  #       shell: bash
-  #     - name: Release Crate
-  #       run: |
-  #         cargo login ${{ secrets.CRATES_TOKEN }}
-  #         cargo publish --allow-dirty  # Set allow-dirty since building will create a /target folder that will be uncommitted in git
-  #       shell: bash
+  publish-crate:
+    needs:
+      - release
+      - build-and-upload-artifact
+    if: needs.release.outputs.release-flag == 'true'
+    runs-on: thevickypedia-lite
+    steps:
+      - uses: actions/checkout@v4
+      - name: Update Rust
+        run: |
+          printf '*%.0s' {1..60} && printf "\n"
+          echo "Existing rust version: $(rustc --version)"
+          printf '*%.0s' {1..60} && printf "\n\n"
+          rustup default 1.81.0 && printf "\n"
+          printf '*%.0s' {1..60} && printf "\n"
+          echo "Updated rust version: $(rustc --version)"
+          printf '*%.0s' {1..60} && printf "\n"
+        shell: bash
+      - name: Release Crate
+        run: |
+          cargo login ${{ secrets.CRATES_TOKEN }}
+          cargo publish --allow-dirty  # Set allow-dirty since building will create a /target folder that will be uncommitted in git
+        shell: bash
