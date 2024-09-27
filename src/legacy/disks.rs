@@ -47,7 +47,7 @@ fn parse_size(size_str: &str) -> String {
 ///
 /// A `bool` indicating if the disk is physical.
 fn is_physical_disk(lib_path: &str, device_id: &str) -> bool {
-    let result = squire::util::run_command(lib_path, &["info", device_id]);
+    let result = squire::util::run_command(lib_path, &["info", device_id], true);
     let output = match result {
         Ok(output) => output,
         Err(_) => {
@@ -73,7 +73,7 @@ fn is_physical_disk(lib_path: &str, device_id: &str) -> bool {
 ///
 /// A `Vec` of `HashMap` containing the disk information.
 fn linux_disks(lib_path: &str) -> Vec<HashMap<String, String>> {
-    let result = squire::util::run_command(lib_path, &["-o", "NAME,SIZE,TYPE,MODEL", "-d"]);
+    let result = squire::util::run_command(lib_path, &["-o", "NAME,SIZE,TYPE,MODEL", "-d"], true);
     let output = match result {
         Ok(output) => output,
         Err(_) => {
@@ -112,7 +112,7 @@ fn linux_disks(lib_path: &str) -> Vec<HashMap<String, String>> {
 ///
 /// A `Vec` of `HashMap` containing the disk information.
 fn darwin_disks(lib_path: &str) -> Vec<HashMap<String, String>> {
-    let result = squire::util::run_command(lib_path, &["list"]);
+    let result = squire::util::run_command(lib_path, &["list"], true);
     let output = match result {
         Ok(output) => output,
         Err(_) => {
@@ -128,7 +128,7 @@ fn darwin_disks(lib_path: &str) -> Vec<HashMap<String, String>> {
         if !is_physical_disk(lib_path, device_id) {
             continue;
         }
-        let result = squire::util::run_command(lib_path, &["info", device_id]);
+        let result = squire::util::run_command(lib_path, &["info", device_id], true);
         let disk_info_output = match result {
             Ok(output) => output,
             Err(_) => {
@@ -183,7 +183,7 @@ fn reformat_windows(data: &mut HashMap<String, Value>) -> HashMap<String, String
 /// A `Vec` of `HashMap` containing the disk information.
 fn windows_disks(lib_path: &str) -> Vec<HashMap<String, String>> {
     let ps_command = "Get-CimInstance Win32_DiskDrive | Select-Object Caption, DeviceID, Model, Partitions, Size | ConvertTo-Json";
-    let result = squire::util::run_command(lib_path, &["-Command", ps_command]);
+    let result = squire::util::run_command(lib_path, &["-Command", ps_command], true);
     let output = match result {
         Ok(output) => output,
         Err(_) => {

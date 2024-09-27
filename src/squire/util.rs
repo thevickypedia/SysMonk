@@ -87,17 +87,17 @@ pub fn size_converter(byte_size: u64) -> String {
     format!("{:.2} {}", size, size_name[index])
 }
 
-/// Function to parse size string.
+/// Function to run a terminal command.
 ///
 /// # Arguments
 ///
-/// * `size_str` - The size string to parse
-/// * `unit` - The unit to convert the size to
+/// * `command` - Command to run
+/// * `log` - Boolean flag to log errors
 ///
 /// # Returns
 ///
 /// A `String` containing the parsed size string.
-pub fn run_command(command: &str, args: &[&str]) -> Result<String, String> {
+pub fn run_command(command: &str, args: &[&str], log: bool) -> Result<String, String> {
     match Command::new(command)
         .args(args)
         .output()
@@ -108,8 +108,10 @@ pub fn run_command(command: &str, args: &[&str]) -> Result<String, String> {
             } else {
                 let stderr = String::from_utf8_lossy(&output.stderr).to_string();
                 let exit_code = output.status.code().unwrap_or(-1);
-                log::error!("Command [{}] failed with exit code: {}", command, exit_code);
-                log::error!("Stderr: {}", stderr);
+                if log {
+                    log::error!("Command [{}] failed with exit code: {}", command, exit_code);
+                    log::error!("Stderr: {}", stderr);
+                }
                 Err(stderr)
             }
         }

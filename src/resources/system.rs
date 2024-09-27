@@ -15,7 +15,7 @@ pub struct OperatingSystem {
 /// A string with the OS architecture.
 fn unamem() -> String {
     // Get architecture using `uname -m` with fallback
-    let result = squire::util::run_command("uname", &["-m"]);
+    let result = squire::util::run_command("uname", &["-m"], true);
     match result {
         Ok(output) => output.to_lowercase(),
         Err(_) => {
@@ -32,7 +32,7 @@ fn unamem() -> String {
 /// A string with the OS name.
 fn unameu() -> String {
     // Get OS using `uname`
-    let result = squire::util::run_command("uname", &[]);
+    let result = squire::util::run_command("uname", &[], true);
     match result {
         Ok(output) => output.to_uppercase(),
         Err(_) => {

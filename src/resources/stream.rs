@@ -2,14 +2,14 @@ use std::collections::HashMap;
 use sysinfo::{CpuRefreshKind, Disks, RefreshKind, System};
 
 use crate::{resources, squire};
-use serde_json::{self, Value};
+use serde_json;
 
 /// Function to get disk statistics.
 ///
 /// # Returns
 ///
 /// A `Value` object with total and used disk space.
-pub fn get_disk_stats() -> Value {
+pub fn get_disk_stats() -> serde_json::Value {
     let disks = Disks::new_with_refreshed_list();
     let disks_total = resources::info::get_disk_usage(&disks);
     let mut disk_available: Vec<u64> = [].to_vec();
@@ -31,12 +31,13 @@ pub fn get_disk_stats() -> Value {
 fn get_docker_stats() -> Result<Vec<serde_json::Value>, Box<dyn std::error::Error>> {
     // Check if there are any docker containers running
     // `docker -a` will show all containers including stopped, which will block `docker stats`
-    let ps_result = squire::util::run_command("docker", &["ps", "-q"]);
+    let ps_result = squire::util::run_command("docker", &["ps", "-q"], false);
     let stats_result = match ps_result {
         Ok(output) if !output.is_empty() => {
             let stats_result = squire::util::run_command(
                 "docker",
                 &["stats", "--no-stream", "--format", "{{json .}}"],
+                false,
             );
             match stats_result {
                 Ok(stats) => stats,
@@ -50,7 +51,7 @@ fn get_docker_stats() -> Result<Vec<serde_json::Value>, Box<dyn std::error::Erro
             return Ok(vec![]);
         }
         Err(err) => {
-            log::error!("Error checking containers: {}", err);
+            log::debug!("Error checking containers: {}", err);
             return Ok(vec![]);
         }
     };
@@ -88,6 +89,8 @@ fn get_system_metrics() -> HashMap<String, serde_json::Value> {
     let mut system = System::new_all();
     system.refresh_all();
 
+    // https://docs.rs/sysinfo/0.31.4/sysinfo/struct.System.html#method.load_average
+    // Currently this doesn't work on Windows
     let load_avg = System::load_average();
     let mut hash_vec = vec![
         (
