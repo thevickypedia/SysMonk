@@ -17,6 +17,7 @@ concurrency:
 
 jobs:
   release:
+    name: Create release and tag
     runs-on: thevickypedia-lite
     permissions:
       contents: write
@@ -103,9 +104,11 @@ jobs:
         shell: bash
 
   build-and-test:
+    name: Build and test (no release)
     needs: release
     if: needs.release.outputs.release-flag == 'false'
-    # Unix like systems don't require additional OpenSSL configuration like Windows, so build
+    # Unix like systems don't require additional OpenSSL configuration like Windows
+    # Making them much more suitable for non-release build and tests
     runs-on:
       - thevickypedia-lite
       - posix
@@ -119,6 +122,8 @@ jobs:
 
   build-and-upload-artifact:
     needs: release
+    outputs:
+      release-flag: ${{ steps.release-id-check.outputs.release_flag }}
     strategy:
       matrix:
         platform:
@@ -142,7 +147,7 @@ jobs:
             bin: ${{ needs.release.outputs.bin-name }}
             name: ${{ needs.release.outputs.pkg-name }}-Darwin-arm64.tar.gz
 
-    name: Build and upload artifact for ${{ matrix.platform.release_for }}
+    name: Build, test and upload artifact for ${{ matrix.platform.release_for }}
     if: needs.release.outputs.release-flag == 'true'
     runs-on: ${{ matrix.platform.os }}
     permissions:
@@ -150,6 +155,7 @@ jobs:
 
     steps:
       - name: Release ID Propagation
+        id: release-id-check
         run: |
           if [ -n "${{ needs.release.outputs.release-id }}" ]; then
             echo "Release ID propagated: ${{ needs.release.outputs.release-id }}"
@@ -157,6 +163,7 @@ jobs:
             echo "Release ID propagation failed. Exiting.."
             exit 1
           fi
+          echo "release_flag=true" >> "$GITHUB_OUTPUT"
           echo "start_time=$(date +%s)" >> "$GITHUB_ENV"
         shell: bash
 
@@ -181,10 +188,10 @@ jobs:
           $VCPKG_DIR = "$env:USERPROFILE\Tools\vcpkg"
           $VCPKG_ROOT = "$VCPKG_DIR\installed\x64-windows-static"
           if (Test-Path $VCPKG_ROOT) {
-            Write-Host "::notice title=VCPKG Installation::Installed vcpkg found at '$VCPKG_DIR'"
+            Write-Host "Installed vcpkg found at '$VCPKG_DIR'"
             Add-Content -Path $env:GITHUB_ENV -Value ("vcpkg_dir=" + $VCPKG_DIR)
           } else {
-            Write-Host "::notice title=VCPKG Installation::Installing fresh copy of vcpkg"
+            Write-Host "Installing vcpkg"
             Add-Content -Path $env:GITHUB_ENV -Value "install_vcpkg=true"
           }
         shell: pwsh
@@ -265,10 +272,10 @@ jobs:
         shell: bash
 
   publish-crate:
+    name: Publish crate
     needs:
-      - release
       - build-and-upload-artifact
-    if: needs.release.outputs.release-flag == 'true'
+    if: needs.build-and-upload-artifact.outputs.release-flag == 'true'
     runs-on: thevickypedia-lite
     steps:
       - uses: actions/checkout@v4
