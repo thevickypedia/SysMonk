@@ -38,6 +38,19 @@ pub fn get_disks(disks: &Disks) -> Vec<HashMap<String, String>> {
     disks_info
 }
 
+
+fn get_gpu_info() -> Vec<String> {
+    let gpu_info = legacy::gpu::get_gpu_info();
+    log::info!("GPUs: {:?}", gpu_info);
+    let mut gpus: Vec<String> = vec![];
+    for gpu in gpu_info {
+        if let Some(gpu_model) = gpu.get("model") {
+            gpus.push(gpu_model.to_string());
+        }
+    }
+    gpus
+}
+
 /// Function to get CPU brand names as a comma separated string.
 ///
 /// # Arguments
@@ -54,7 +67,7 @@ fn get_cpu_brand(sys: &System) -> String {
         cpu_brands.insert(cpu.brand().to_string());
     }
     if cpu_brands.is_empty() {
-        let legacy_cpu_brand_name = legacy::cpu_brand::get_name();
+        let legacy_cpu_brand_name = legacy::cpu::get_name();
         return if let Some(cpu_brand) = legacy_cpu_brand_name {
             log::debug!("Using legacy methods for CPU brand!!");
             cpu_brand
@@ -97,7 +110,7 @@ pub fn get_sys_info(disks: &Disks) -> HashMap<&'static str, HashMap<&'static str
 
     // Basic and Memory/Storage Info
     let os_arch = resources::system::os_arch();
-    let basic = HashMap::from_iter(vec![
+    let mut basic = HashMap::from_iter(vec![
         ("Hostname", System::host_name().unwrap_or("Unknown".to_string())),
         ("Operating System", squire::util::capwords(&os_arch.name, None)),
         ("Architecture", os_arch.architecture),
@@ -105,6 +118,11 @@ pub fn get_sys_info(disks: &Disks) -> HashMap<&'static str, HashMap<&'static str
         ("CPU cores", sys.cpus().len().to_string()),
         ("CPU brand", get_cpu_brand(&sys))
     ]);
+    let gpu_info = get_gpu_info();
+    if !gpu_info.is_empty() {
+        let key = if gpu_info.len() == 1 { "GPU" } else { "GPUs" };
+        basic.insert(key, gpu_info.join(", "));
+    }
     let mut hash_vec = vec![
         ("Memory", total_memory),
         ("Storage", total_storage)
