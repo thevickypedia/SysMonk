@@ -1,6 +1,6 @@
 [package]
 name = "SysMonk"
-version = "0.1.0-alpha"
+version = "0.0.2-alpha"
 description = "SysMonk is a highly efficient, lightweight API for resource monitoring that uses WebSockets for real-time streaming."
 license = "MIT"
 documentation = "https://docs.rs/SysMonk"

@@ -86,8 +86,7 @@ jobs:
 
           echo "Release Tag: $release_tag"
           latest_tag=$(curl -s -L https://api.github.com/repos/${{ github.repository }}/releases/latest | jq -r .tag_name)
-          commit_msg="$(git log -1 --pretty=%B | sed ':a;N;$!ba;s/\n/\\n/g')"
-          commit_msg+="\n**Full Changelog**: ${{ github.server_url }}/${{ github.repository }}/compare/$latest_tag...$release_tag"
+          commit_msg="**Full Changelog**: ${{ github.server_url }}/${{ github.repository }}/compare/$latest_tag...$release_tag"
           release_data="{\"tag_name\":\"$release_tag\",\"name\":\"$release_tag\",\"body\":\"$commit_msg\",\"draft\":false,\"prerelease\":$prerelease}"
           response=$(curl -X POST -H "Authorization: token ${{ secrets.GIT_TOKEN }}" \
             -d "$release_data" \
@@ -122,25 +121,25 @@ jobs:
     strategy:
       matrix:
         platform:
-          - release_for: Linux-x86_64
-            os: linux-x64
-            bin: ${{ needs.release.outputs.bin-name }}
-            name: ${{ needs.release.outputs.pkg-name }}-Linux-x86_64.tar.gz
+          # - release_for: Linux-x86_64
+          #   os: linux-x64
+          #   bin: ${{ needs.release.outputs.bin-name }}
+          #   name: ${{ needs.release.outputs.pkg-name }}-Linux-x86_64.tar.gz
 
           - release_for: Windows-x86_64
             os: windows-x64
             bin: ${{ needs.release.outputs.bin-name }}.exe
             name: ${{ needs.release.outputs.pkg-name }}-Windows-x86_64.zip
 
-          - release_for: macOS-x86_64
-            os: darwin-x64
-            bin: ${{ needs.release.outputs.bin-name }}
-            name: ${{ needs.release.outputs.pkg-name }}-Darwin-x86_64.tar.gz
+          # - release_for: macOS-x86_64
+          #   os: darwin-x64
+          #   bin: ${{ needs.release.outputs.bin-name }}
+          #   name: ${{ needs.release.outputs.pkg-name }}-Darwin-x86_64.tar.gz
 
-          - release_for: macOS-arm64
-            os: darwin-arm64
-            bin: ${{ needs.release.outputs.bin-name }}
-            name: ${{ needs.release.outputs.pkg-name }}-Darwin-arm64.tar.gz
+          # - release_for: macOS-arm64
+          #   os: darwin-arm64
+          #   bin: ${{ needs.release.outputs.bin-name }}
+          #   name: ${{ needs.release.outputs.pkg-name }}-Darwin-arm64.tar.gz
 
     name: Upload asset for ${{ matrix.platform.release_for }}
     if: needs.release.outputs.release-flag == 'true'
@@ -175,19 +174,36 @@ jobs:
           printf '*%.0s' {1..60} && printf "\n"
         shell: bash
 
-      - name: Install OpenSSL static for Windows
-        # https://github.com/sfackler/rust-openssl/issues/1086
+      - name: Check OpenSSL (Windows)
         if: startsWith(matrix.platform.os, 'windows')
         run: |
-          if (-Not (Test-Path -Path \Tools)) {
-            mkdir \Tools
+          $VCPKG_DIR = "$env:USERPROFILE\Tools\vcpkg"
+          $VCPKG_ROOT = "$VCPKG_DIR\installed\x64-windows-static"
+          $OPENSSL_DIR = "$VCPKG_DIR\installed\x64-windows-static"
+          if (Test-Path $VCPKG_ROOT) {
+            if (Test-Path $OPENSSL_DIR) {
+              Write-Host "::notice title=VCPKG Installation::Re-using existing vcpkg"
+              Add-Content -Path $env:GITHUB_ENV -Value ("vcpkg_dir=" + $VCPKG_DIR)
+            } 
+          } else {
+            Write-Host "::notice title=VCPKG Installation::Installing fresh copy of vcpkg"
+            Add-Content -Path $env:GITHUB_ENV -Value "install_vcpkg=true"
           }
-          cd \Tools
+        shell: pwsh
+
+      - name: Install OpenSSL (Windows)
+        # https://github.com/sfackler/rust-openssl/issues/1086
+        if: startsWith(matrix.platform.os, 'windows') && env.install_vcpkg == 'true'
+        run: |
+          if (-Not (Test-Path -Path $env:USERPROFILE\Tools)) {
+            mkdir $env:USERPROFILE\Tools
+          }
+          cd $env:USERPROFILE\Tools
           if (-Not (Test-Path -Path .\vcpkg)) {
             git clone https://github.com/Microsoft/vcpkg.git
           }
           cd vcpkg
-          echo ("vcpkg_dir=" + $pwd) >> $env:GITHUB_ENV
+          Add-Content -Path $env:GITHUB_ENV -Value ("vcpkg_dir=" + $pwd)
           if (-Not (Test-Path -Path .\vcpkg.exe)) {
             .\bootstrap-vcpkg.bat
           }
@@ -250,26 +266,26 @@ jobs:
           echo "🚀 Built for $hyperlink in $time_taken seconds" >> $GITHUB_STEP_SUMMARY
         shell: bash
 
-  publish-crate:
-    needs:
-      - release
-      - upload_assets
-    if: needs.release.outputs.release-flag == 'true'
-    runs-on: thevickypedia-lite
-    steps:
-      - uses: actions/checkout@v4
-      - name: Update Rust
-        run: |
-          printf '*%.0s' {1..60} && printf "\n"
-          echo "Existing rust version: $(rustc --version)"
-          printf '*%.0s' {1..60} && printf "\n\n"
-          rustup default 1.81.0 && printf "\n"
-          printf '*%.0s' {1..60} && printf "\n"
-          echo "Updated rust version: $(rustc --version)"
-          printf '*%.0s' {1..60} && printf "\n"
-        shell: bash
-      - name: Release Crate
-        run: |
-          cargo login ${{ secrets.CRATES_TOKEN }}
-          cargo publish --allow-dirty  # Set allow-dirty since building will create a /target folder that will be uncommitted in git
-        shell: bash
+  # publish-crate:
+  #   needs:
+  #     - release
+  #     - upload_assets
+  #   if: needs.release.outputs.release-flag == 'true'
+  #   runs-on: thevickypedia-lite
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: Update Rust
+  #       run: |
+  #         printf '*%.0s' {1..60} && printf "\n"
+  #         echo "Existing rust version: $(rustc --version)"
+  #         printf '*%.0s' {1..60} && printf "\n\n"
+  #         rustup default 1.81.0 && printf "\n"
+  #         printf '*%.0s' {1..60} && printf "\n"
+  #         echo "Updated rust version: $(rustc --version)"
+  #         printf '*%.0s' {1..60} && printf "\n"
+  #       shell: bash
+  #     - name: Release Crate
+  #       run: |
+  #         cargo login ${{ secrets.CRATES_TOKEN }}
+  #         cargo publish --allow-dirty  # Set allow-dirty since building will create a /target folder that will be uncommitted in git
+  #       shell: bash
