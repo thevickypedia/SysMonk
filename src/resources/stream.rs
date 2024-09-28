@@ -63,18 +63,18 @@ fn get_docker_stats() -> Result<Vec<serde_json::Value>, Box<dyn std::error::Erro
 }
 
 fn get_service_stats(
-    system: &System,
+    system: &mut System,
     config: &squire::settings::Config
 ) -> Vec<serde_json::Value> {
-    let usages = resources::operations::service_monitor(&system, &config.services);
+    let usages = resources::operations::service_monitor(system, &config.services);
     usages.into_iter().map(|usage| serde_json::to_value(usage).unwrap()).collect()
 }
 
 fn get_process_stats(
-    system: &System,
+    system: &mut System,
     config: &squire::settings::Config
 ) -> Vec<serde_json::Value> {
-    let usages = resources::operations::process_monitor(&system, &config.processes);
+    let usages = resources::operations::process_monitor(system, &config.processes);
     usages.into_iter().map(|usage| serde_json::to_value(usage).unwrap()).collect()
 }
 
@@ -151,11 +151,11 @@ pub fn system_resources(config: &squire::settings::Config) -> HashMap<String, se
     system_metrics.insert("cpu_usage".to_string(), serde_json::json!(cpu_percent));
     system_metrics.insert("docker_stats".to_string(), serde_json::json!(docker_stats));
     if !config.services.is_empty() {
-        let service_stats = get_service_stats(&system, &config);
+        let service_stats = get_service_stats(&mut system, &config);
         system_metrics.insert("service_stats".to_string(), serde_json::json!(service_stats));
     }
     if !config.processes.is_empty() {
-        let process_stats = get_process_stats(&system, &config);
+        let process_stats = get_process_stats(&mut system, &config);
         system_metrics.insert("process_stats".to_string(), serde_json::json!(process_stats));
     }
     system_metrics

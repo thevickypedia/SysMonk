@@ -344,6 +344,9 @@ pub fn get_content() -> String {
                 <th>Service Name</th>
                 <th>CPU %</th>
                 <th>Memory Usage</th>
+                <th>Uptime</th>
+                <th>Read I/O</th>
+                <th>Write I/O</th>
             </tr>
         </thead>
         <tbody>
@@ -359,6 +362,9 @@ pub fn get_content() -> String {
                 <th>Process Name</th>
                 <th>CPU %</th>
                 <th>Memory Usage</th>
+                <th>Uptime</th>
+                <th>Read I/O</th>
+                <th>Write I/O</th>
             </tr>
         </thead>
         <tbody>
@@ -451,6 +457,9 @@ pub fn get_content() -> String {
                         <td>${service.name}</td>
                         <td>${service.cpu}</td>
                         <td>${service.memory}</td>
+                        <td>${service.uptime}</td>
+                        <td>${service.read_io}</td>
+                        <td>${service.write_io}</td>
                     `;
                     tableBody.appendChild(row);
                 });
@@ -481,6 +490,9 @@ pub fn get_content() -> String {
                         <td>${process.name}</td>
                         <td>${process.cpu}</td>
                         <td>${process.memory}</td>
+                        <td>${process.uptime}</td>
+                        <td>${process.read_io}</td>
+                        <td>${process.write_io}</td>
                     `;
                     tableBody.appendChild(row);
                 });

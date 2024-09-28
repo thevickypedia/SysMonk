@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 use crate::squire;
-use sysinfo::{Pid, System};
+use sysinfo::{Pid, ProcessesToUpdate, System};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Usage {
@@ -8,31 +8,47 @@ pub struct Usage {
     pid: u32,
     cpu: String,
     memory: String,
+    uptime: String,
+    read_io: String,
+    write_io: String
 }
 
-pub fn process_monitor(system: &System, process_names: &Vec<String>) -> Vec<Usage> {
+pub fn process_monitor(system: &mut System, process_names: &Vec<String>) -> Vec<Usage> {
     let mut usages: Vec<Usage> = Vec::new();
+    system.refresh_processes(ProcessesToUpdate::All);
     for (pid, process) in system.processes() {
         let process_name = process.name().to_str().unwrap().to_string();
         if process_names.iter().any(|given_name| process_name.contains(given_name)) {
             let cpu_usage = process.cpu_usage();
             let memory_usage = process.memory();
-            let cpu = format!("{}", cpu_usage);
+            let cpu = format!("{:.2}%", cpu_usage);
             let memory = squire::util::size_converter(memory_usage);
             let pid_32 = pid.as_u32();
+
+            let uptime = squire::util::convert_seconds(process.run_time() as i64);
+            let disk_usage = process.disk_usage();
+            let written = squire::util::size_converter(disk_usage.total_written_bytes);
+            let written_since = squire::util::size_converter(disk_usage.written_bytes);
+            let read = squire::util::size_converter(disk_usage.total_read_bytes);
+            let read_since = squire::util::size_converter(disk_usage.read_bytes);
+
             usages.push(Usage {
                 name: process_name,
                 pid: pid_32,
                 cpu,
                 memory,
+                uptime,
+                read_io: format!("{}/{}", read_since, read),
+                write_io: format!("{}/{}", written_since, written)
             });
         }
     }
     usages
 }
 
-pub fn service_monitor(system: &System, service_names: &Vec<String>) -> Vec<Usage> {
+pub fn service_monitor(system: &mut System, service_names: &Vec<String>) -> Vec<Usage> {
     let mut usages: Vec<Usage> = Vec::new();
+    system.refresh_processes(ProcessesToUpdate::All);
     for service_name in service_names {
         match service_monitor_fn(system, &service_name) {
             Ok(usage) => usages.push(usage),
@@ -43,6 +59,9 @@ pub fn service_monitor(system: &System, service_names: &Vec<String>) -> Vec<Usag
                     pid: 0000,
                     memory: "N/A".to_string(),
                     cpu: "N/A".to_string(),
+                    uptime: "N/A".to_string(),
+                    read_io: "N/A".to_string(),
+                    write_io: "N/A".to_string()
                 });
             }
         };
@@ -59,14 +78,25 @@ fn service_monitor_fn(system: &System, service_name: &String) -> Result<Usage, S
     if let Some(process) = system.process(sys_pid) {
         let cpu_usage = process.cpu_usage();
         let memory_usage = process.memory();
-        let cpu = format!("{}", cpu_usage);
+        let cpu = format!("{:.2}%", cpu_usage);
         let memory = squire::util::size_converter(memory_usage);
         let pid_32 = sys_pid.as_u32();
+
+        let uptime = squire::util::convert_seconds(process.run_time() as i64);
+        let disk_usage = process.disk_usage();
+        let written = squire::util::size_converter(disk_usage.total_written_bytes);
+        let written_since = squire::util::size_converter(disk_usage.written_bytes);
+        let read = squire::util::size_converter(disk_usage.total_read_bytes);
+        let read_since = squire::util::size_converter(disk_usage.read_bytes);
+
         Ok(Usage {
             name: service_name.to_string(),
             pid: pid_32,
             cpu,
             memory,
+            uptime,
+            read_io: format!("{}/{}", read_since, read),
+            write_io: format!("{}/{}", written_since, written)
         })
     } else {
         Err(format!("Process with PID {} not found", pid))
