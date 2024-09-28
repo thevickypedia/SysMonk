@@ -62,6 +62,22 @@ fn get_docker_stats() -> Result<Vec<serde_json::Value>, Box<dyn std::error::Erro
     Ok(stats)
 }
 
+fn get_service_stats(
+    system: &System,
+    config: &squire::settings::Config
+) -> Vec<serde_json::Value> {
+    let usages = resources::operations::service_monitor(&system, &config.services);
+    usages.into_iter().map(|usage| serde_json::to_value(usage).unwrap()).collect()
+}
+
+fn get_process_stats(
+    system: &System,
+    config: &squire::settings::Config
+) -> Vec<serde_json::Value> {
+    let usages = resources::operations::process_monitor(&system, &config.processes);
+    usages.into_iter().map(|usage| serde_json::to_value(usage).unwrap()).collect()
+}
+
 /// Function to get CPU usage percentage.
 ///
 /// # Returns
@@ -85,10 +101,7 @@ fn get_cpu_percent() -> Vec<String> {
 /// # Returns
 ///
 /// A `HashMap` containing the system metrics with CPU load average, memory and swap usage.
-fn get_system_metrics() -> HashMap<String, serde_json::Value> {
-    let mut system = System::new_all();
-    system.refresh_all();
-
+fn get_system_metrics(system: &System) -> HashMap<String, serde_json::Value> {
     // https://docs.rs/sysinfo/0.31.4/sysinfo/struct.System.html#method.load_average
     // Currently this doesn't work on Windows
     let load_avg = System::load_average();
@@ -129,11 +142,21 @@ fn get_system_metrics() -> HashMap<String, serde_json::Value> {
 /// # Returns
 ///
 /// A `HashMap` containing the system information with basic system information and memory/storage information.
-pub fn system_resources() -> HashMap<String, serde_json::Value> {
-    let mut system_metrics = get_system_metrics();
+pub fn system_resources(config: &squire::settings::Config) -> HashMap<String, serde_json::Value> {
+    let mut system = System::new_all();
+    system.refresh_all();
+    let mut system_metrics = get_system_metrics(&system);
     let cpu_percent = get_cpu_percent();
     let docker_stats = get_docker_stats().unwrap();
     system_metrics.insert("cpu_usage".to_string(), serde_json::json!(cpu_percent));
     system_metrics.insert("docker_stats".to_string(), serde_json::json!(docker_stats));
+    if !config.services.is_empty() {
+        let service_stats = get_service_stats(&system, &config);
+        system_metrics.insert("service_stats".to_string(), serde_json::json!(service_stats));
+    }
+    if !config.processes.is_empty() {
+        let process_stats = get_process_stats(&system, &config);
+        system_metrics.insert("process_stats".to_string(), serde_json::json!(process_stats));
+    }
     system_metrics
 }

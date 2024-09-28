@@ -223,7 +223,9 @@ fn load_env_vars() -> settings::Config {
     let session_duration = parse_i64("session_duration").unwrap_or(settings::default_session_duration());
     let workers = parse_usize("workers").unwrap_or(settings::default_workers());
     let max_connections = parse_usize("max_connections").unwrap_or(settings::default_max_connections());
-    let websites = parse_vec("websites").unwrap_or(settings::default_websites());
+    let websites = parse_vec("websites").unwrap_or(settings::default_vec());
+    let services = parse_vec("services").unwrap_or(settings::default_vec());
+    let processes = parse_vec("processes").unwrap_or(settings::default_vec());
     settings::Config {
         username,
         password,
@@ -235,6 +237,8 @@ fn load_env_vars() -> settings::Config {
         workers,
         max_connections,
         websites,
+        services,
+        processes
     }
 }
 
@@ -356,6 +360,7 @@ pub fn get_config(metadata: &constant::MetaData) -> std::sync::Arc<settings::Con
     let env_file_path = std::env::current_dir()
         .unwrap_or_default()
         .join(env_file);
+    // https://github.com/dotenv-rs/dotenv/issues/94
     let _ = dotenv::from_path(env_file_path.as_path());
     std::sync::Arc::new(validate_vars())
 }

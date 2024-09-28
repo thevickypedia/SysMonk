@@ -25,6 +25,10 @@ pub struct Config {
     pub max_connections: usize,
     /// List of websites (supports regex) to add to CORS configuration.
     pub websites: Vec<String>,
+    /// List of services to monitor.
+    pub services: Vec<String>,
+    /// List of processes to monitor.
+    pub processes: Vec<String>,
 }
 
 /// Returns the default value for debug flag.
@@ -70,5 +74,5 @@ pub fn default_workers() -> usize {
 /// Returns the default maximum number of concurrent connections (3)
 pub fn default_max_connections() -> usize { 3 }
 
-/// Returns an empty list as the default website (CORS configuration)
-pub fn default_websites() -> Vec<String> { Vec::new() }
+/// Returns an empty vec
+pub fn default_vec() -> Vec<String> { Vec::new() }

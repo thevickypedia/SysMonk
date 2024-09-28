@@ -6,3 +6,5 @@ pub mod network;
 pub mod system;
 /// This module contains functions that are responsible to stream information via websockets.
 pub mod stream;
+/// This module contains functions related to service and process monitoring.
+pub mod operations;

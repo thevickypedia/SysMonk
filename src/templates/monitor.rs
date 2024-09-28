@@ -48,6 +48,34 @@ pub fn get_content() -> String {
             margin-bottom: 20px;
         }
 
+        .service-stats {
+            height: 100%;
+            margin: 2%;
+            display: none;  /* Hide the container initially */
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;  /* Ensure vertical alignment */
+        }
+
+        .service-stats h3 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .process-stats {
+            height: 100%;
+            margin: 2%;
+            display: none;  /* Hide the container initially */
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;  /* Ensure vertical alignment */
+        }
+
+        .process-stats h3 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
         table {
             width: 80%;
             border-collapse: collapse;
@@ -307,6 +335,36 @@ pub fn get_content() -> String {
         </tbody>
     </table>
 </div>
+<div id="service-stats" class="service-stats">
+    <h3>Service Stats</h3>
+    <table id="serviceStatsTable">
+        <thead>
+            <tr>
+                <th>PID</th>
+                <th>Service Name</th>
+                <th>CPU %</th>
+                <th>Memory Usage</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+</div>
+<div id="process-stats" class="process-stats">
+    <h3>Process Stats</h3>
+    <table id="processStatsTable">
+        <thead>
+            <tr>
+                <th>PID</th>
+                <th>Process Name</th>
+                <th>CPU %</th>
+                <th>Memory Usage</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+</div>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const wsProtocol = window.location.protocol === "https:" ? "wss" : "ws";
@@ -369,6 +427,66 @@ pub fn get_content() -> String {
             } else {
                 // Hide the container if no data is available
                 document.getElementById("docker-stats").style.display = "none";
+            }
+
+            const serviceStatsJSON = data.service_stats;
+            // Check if serviceStatsJSON is valid
+            if (serviceStatsJSON && serviceStatsJSON.length > 0) {
+                // Show the service and the table
+                const statsService = document.getElementById("service-stats");
+                statsService.style.display = "flex";
+                const table = document.getElementById("serviceStatsTable");
+                table.style.display = "table";
+                // Get reference to the table body
+                const tableBody = document.querySelector('#serviceStatsTable tbody');
+                // Clear the existing table rows
+                tableBody.innerHTML = '';
+                // Sort by name in ascending order
+                serviceStatsJSON.sort((a, b) => a.name.localeCompare(b.name));
+                // Loop through the JSON data and populate the table
+                serviceStatsJSON.forEach(service => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${service.pid}</td>
+                        <td>${service.name}</td>
+                        <td>${service.cpu}</td>
+                        <td>${service.memory}</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            } else {
+                // Hide the container if no data is available
+                document.getElementById("service-stats").style.display = "none";
+            }
+
+            const processStatsJSON = data.process_stats;
+            // Check if processStatsJSON is valid
+            if (processStatsJSON && processStatsJSON.length > 0) {
+                // Show the process and the table
+                const statsProcess = document.getElementById("process-stats");
+                statsProcess.style.display = "flex";
+                const table = document.getElementById("processStatsTable");
+                table.style.display = "table";
+                // Get reference to the table body
+                const tableBody = document.querySelector('#processStatsTable tbody');
+                // Clear the existing table rows
+                tableBody.innerHTML = '';
+                // Sort by name in ascending order
+                processStatsJSON.sort((a, b) => a.name.localeCompare(b.name));
+                // Loop through the JSON data and populate the table
+                processStatsJSON.forEach(process => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${process.pid}</td>
+                        <td>${process.name}</td>
+                        <td>${process.cpu}</td>
+                        <td>${process.memory}</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            } else {
+                // Hide the container if no data is available
+                document.getElementById("process-stats").style.display = "none";
             }
 
             // Update CPU usage

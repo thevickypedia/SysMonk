@@ -13,11 +13,15 @@ use std::time::Duration;
 /// # Arguments
 ///
 /// * `request` - A reference to the Actix web `HttpRequest` object.
-async fn send_system_resources(request: HttpRequest, mut session: actix_ws::Session) {
+async fn send_system_resources(
+    request: HttpRequest,
+    mut session: actix_ws::Session,
+    config: web::Data<Arc<squire::settings::Config>>,
+) {
     let host = request.connection_info().host().to_string();
     let disk_stats = resources::stream::get_disk_stats();
     loop {
-        let mut system_resources = resources::stream::system_resources();
+        let mut system_resources = resources::stream::system_resources(&config);
         system_resources.insert("disk_info".to_string(), disk_stats.clone());
         let serialized = serde_json::to_string(&system_resources).unwrap();
         match session.text(serialized).await {
@@ -123,7 +127,7 @@ async fn echo(
         .aggregate_continuations();
     rt::spawn(async move {
         log::warn!("Connection established");
-        let send_task = send_system_resources(request.clone(), session.clone());
+        let send_task = send_system_resources(request.clone(), session.clone(), config.clone());
         let receive_task = receive_messages(session.clone(), stream);
         let session_task = session_handler(session.clone(), config.session_duration);
         future::join3(send_task, receive_task, session_task).await;
