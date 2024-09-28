@@ -116,7 +116,9 @@ pub fn run_command(command: &str, args: &[&str], log: bool) -> Result<String, St
             }
         }
         Err(err) => {
-            log::error!("Failed to execute command: {}", err);
+            if log {
+                log::error!("Failed to execute command [{}]: {}", command, err);
+            }
             Err(err.to_string())
         }
     }

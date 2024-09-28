@@ -102,33 +102,38 @@ fn get_gpu_info_windows(lib_path: &str) -> Vec<HashMap<String, String>> {
         &["path", "win32_videocontroller", "get", "Name,AdapterCompatibility", "/format:csv"],
         true
     );
-    if result.is_err() {
-        return Vec::new();
-    }
-    let stdout = result.unwrap();
-    let gpus_raw: Vec<&str> = stdout.lines().filter(|line| !line.trim().is_empty()).collect();    
+    let output = match result {
+        Ok(output) => output.to_uppercase(),
+        Err(_) => {
+            return Vec::new();
+        }
+    };
+    let gpus_raw: Vec<&str> = output.lines().filter(|line| !line.trim().is_empty()).collect();    
     if gpus_raw.is_empty() {
+        log::info!("No GPUs found!");
         return vec![];
     }
 
     let keys: Vec<String> = gpus_raw[0]
-        .replace("Node", "node")
-        .replace("AdapterCompatibility", "vendor")
-        .replace("Name", "model")
+        .trim()
+        .to_lowercase()
+        .replace("node", "node")
+        .replace("adaptercompatibility", "vendor")
+        .replace("name", "model")
         .split(',')
         .map(|key| key.to_string())
         .collect();
 
+    let binding = gpus_raw[1..].join("");
+    let values: Vec<&str> = binding.trim().split(",").collect();
     let mut gpu_info = Vec::new();
-
-    for values in gpus_raw[1..].chunks(keys.len()) {
-        if values.len() == keys.len() {
-            let mut info = HashMap::new();
-            for (key, value) in keys.iter().zip(values.iter()) {
-                info.insert(key.clone(), value.to_string());
-            }
-            gpu_info.push(info);
+    let key_len = keys.len();
+    for chunk in values.chunks(key_len) {
+        let mut map = std::collections::HashMap::new();
+        for (key, value) in keys.iter().zip(chunk) {
+            map.insert(key.to_string(), value.to_string());
         }
+        gpu_info.push(map);
     }
     gpu_info
 }
