@@ -40,7 +40,6 @@ mod legacy;
 /// ```
 pub async fn start() -> io::Result<()> {
     let metadata = constant::build_info();
-    // todo: Move all commandline process to config - so it configurable via .env files
     let config = squire::startup::get_config(&metadata);
 
     squire::startup::init_logger(config.debug, config.utc_logging, &metadata.crate_name);
