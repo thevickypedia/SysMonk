@@ -154,7 +154,8 @@ fn darwin_disks(lib_path: &str) -> Vec<HashMap<String, String>> {
                         .split(":")
                         .nth(1)
                         .unwrap_or_default()
-                        .trim().to_string()
+                        .trim()
+                        .to_string()
                 );
             }
             if info_line.contains("Disk Size:") {
@@ -200,9 +201,9 @@ fn reformat_windows(data: &mut HashMap<String, Value>) -> HashMap<String, String
     reformatted_data.insert(
         "DeviceID".to_string(),
         data.get("DeviceID")
-            .unwrap()
+            .unwrap_or(&Value::String("".to_string()))
             .as_str()
-            .unwrap()
+            .unwrap_or_default()
             .to_string()
     );
     reformatted_data

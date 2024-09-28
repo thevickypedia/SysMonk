@@ -12,12 +12,8 @@ use crate::squire;
 /// # Returns
 ///
 /// A `Option` containing the processor information if successful, otherwise `None`.
-fn get_processor_info_darwin(lib_path: &str) -> Result<String, &'static str> {
-    let result = squire::util::run_command(lib_path, &["-n", "machdep.cpu.brand_string"], true);
-    if result.is_err() {
-        return Err("Failed to get processor info");
-    }
-    Ok(result.unwrap())
+fn get_processor_info_darwin(lib_path: &str) -> Result<String, String> {
+    squire::util::run_command(lib_path, &["-n", "machdep.cpu.brand_string"], true)
 }
 
 /// Function to get processor information on Linux.
@@ -29,10 +25,10 @@ fn get_processor_info_darwin(lib_path: &str) -> Result<String, &'static str> {
 /// # Returns
 ///
 /// A `Option` containing the processor information if successful, otherwise `None`.
-fn get_processor_info_linux(lib_path: &str) -> Result<String, &'static str> {
+fn get_processor_info_linux(lib_path: &str) -> Result<String, String> {
     let file = match File::open(lib_path) {
         Ok(file) => file,
-        Err(_) => return Err("Failed to open file"),
+        Err(_) => return Err(format!("Failed to open '{}'", lib_path)),
     };
     for line in io::BufReader::new(file).lines() {
         match line {
@@ -44,10 +40,10 @@ fn get_processor_info_linux(lib_path: &str) -> Result<String, &'static str> {
                     }
                 }
             }
-            Err(_) => return Err("Error reading line"),
+            Err(_) => return Err(format!("Error reading lines in '{}'", lib_path)),
         }
     }
-    Err("Model name not found")
+    Err(format!("Model name not found in '{}'", lib_path))
 }
 
 /// Function to get processor information on Windows.
@@ -59,17 +55,17 @@ fn get_processor_info_linux(lib_path: &str) -> Result<String, &'static str> {
 /// # Returns
 ///
 /// A `Option` containing the processor information if successful, otherwise `None`.
-fn get_processor_info_windows(lib_path: &str) -> Result<String, &'static str> {
+fn get_processor_info_windows(lib_path: &str) -> Result<String, String> {
     let result = squire::util::run_command(lib_path, &["cpu", "get", "name"], true);
     let output = match result {
         Ok(output) => output,
-        Err(_) => return Err("Failed to get processor info"),
+        Err(_) => return Err("Failed to get processor info".to_string()),
     };
     let lines: Vec<&str> = output.trim().split('\n').collect();
     if lines.len() > 1 {
         Ok(lines[1].trim().to_string())
     } else {
-        Err("Invalid output from command")
+        Err("Invalid output from command".to_string())
     }
 }
 
@@ -86,7 +82,7 @@ pub fn get_name() -> Option<String> {
         "windows" => get_processor_info_windows("C:\\Windows\\System32\\wbem\\wmic.exe"),
         _ => {
             log::error!("Unsupported operating system: {}", operating_system);
-            Err("Unsupported operating system")
+            Err("Unsupported operating system".to_string())
         }
     };
     match result {

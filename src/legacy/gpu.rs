@@ -101,11 +101,12 @@ fn get_gpu_info_linux(lib_path: &str) -> Vec<HashMap<String, String>> {
         &[],
         true,
     );
-    if result.is_err() {
-        return Vec::new();
-    }
+    let output = match result {
+        Ok(output) => output,
+        Err(_) => return Vec::new(),
+    };
     let mut gpu_info = Vec::new();
-    for line in result.unwrap().lines() {
+    for line in output.lines() {
         if line.contains("VGA") {
             let gpu = line.split(':').last().unwrap().trim();
             let mut info = HashMap::new();
