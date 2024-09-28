@@ -1,34 +1,46 @@
-use std::collections::HashMap;
-use serde_json::Value;
 use crate::squire;
+use serde_json::Value;
+use std::collections::HashMap;
 
-pub fn get_gpu_info() -> Vec<HashMap<String, String>> {
-    let operating_system = std::env::consts::OS;
-    match operating_system {
-        "macos" => get_gpu_info_darwin("/usr/sbin/system_profiler"),
-        "linux" => get_gpu_info_linux("/usr/bin/lspci"),
-        "windows" => get_gpu_info_windows("C:\\Windows\\System32\\wbem\\wmic.exe"),
-        _ => {
-            log::error!("Unsupported operating system: {}", operating_system);
-            Vec::new()
-        }
-    }
-}
-
+/// Function to get GPU information for macOS machines.
+///
+/// # Arguments
+///
+/// * `lib_path` - The path to the library used to get GPU information.
+///
+/// # Returns
+///
+/// A `Vec` of `HashMap` containing GPU(s) information if successful, otherwise an empty `Vec`.
 fn get_gpu_info_darwin(lib_path: &str) -> Vec<HashMap<String, String>> {
-    let result = squire::util::run_command(
+    let result: Result<String, String> = squire::util::run_command(
         lib_path,
         &["SPDisplaysDataType", "-json"],
-        true
+        true,
     );
-    if result.is_err() {
-        return Vec::new();
+    let displays: Vec<Value>;
+    match result {
+        Ok(json_str) => {
+            match serde_json::from_str::<Value>(&json_str) {
+                Ok(json) => {
+                    if let Some(d) = json.get("SPDisplaysDataType").and_then(Value::as_array) {
+                        displays = d.to_vec();
+                    } else {
+                        log::error!("Key 'SPDisplaysDataType' not found or is not an array.");
+                        return Vec::new();
+                    }
+                }
+                Err(err) => {
+                    log::error!("Failed to parse JSON: {}", err);
+                    return Vec::new();
+                }
+            }
+        }
+        Err(err) => {
+            log::error!("Error retrieving result: {}", err);
+            return Vec::new();
+        }
     }
-    let json: Value = serde_json::from_str(&result.unwrap()).unwrap();
-    
-    let displays = json["SPDisplaysDataType"].as_array().unwrap();
     let mut gpu_info = Vec::new();
-
     let na = "N/A".to_string();
     for display in displays {
         if let Some(model) = display.get("sppci_model") {
@@ -37,7 +49,7 @@ fn get_gpu_info_darwin(lib_path: &str) -> Vec<HashMap<String, String>> {
                 "model".to_string(),
                 model.as_str()
                     .unwrap_or(na.as_str())
-                    .to_string()
+                    .to_string(),
             );
 
             // Handle cores
@@ -68,18 +80,26 @@ fn get_gpu_info_darwin(lib_path: &str) -> Vec<HashMap<String, String>> {
                     .unwrap_or(&na)
                     .to_string(),
             );
-
             gpu_info.push(info);
         }
     }
     gpu_info
 }
 
+/// Function to get GPU information for Linux machines.
+///
+/// # Arguments
+///
+/// * `lib_path` - The path to the library used to get GPU information.
+///
+/// # Returns
+///
+/// A `Vec` of `HashMap` containing GPU(s) information if successful, otherwise an empty `Vec`.
 fn get_gpu_info_linux(lib_path: &str) -> Vec<HashMap<String, String>> {
     let result = squire::util::run_command(
         lib_path,
         &[],
-        true
+        true,
     );
     if result.is_err() {
         return Vec::new();
@@ -96,11 +116,20 @@ fn get_gpu_info_linux(lib_path: &str) -> Vec<HashMap<String, String>> {
     gpu_info
 }
 
+/// Function to get GPU information for Windows machines.
+///
+/// # Arguments
+///
+/// * `lib_path` - The path to the library used to get GPU information.
+///
+/// # Returns
+///
+/// A `Vec` of `HashMap` containing GPU(s) information if successful, otherwise an empty `Vec`.
 fn get_gpu_info_windows(lib_path: &str) -> Vec<HashMap<String, String>> {
     let result = squire::util::run_command(
         lib_path,
         &["path", "win32_videocontroller", "get", "Name,AdapterCompatibility", "/format:csv"],
-        true
+        true,
     );
     let output = match result {
         Ok(output) => output.to_uppercase(),
@@ -108,7 +137,7 @@ fn get_gpu_info_windows(lib_path: &str) -> Vec<HashMap<String, String>> {
             return Vec::new();
         }
     };
-    let gpus_raw: Vec<&str> = output.lines().filter(|line| !line.trim().is_empty()).collect();    
+    let gpus_raw: Vec<&str> = output.lines().filter(|line| !line.trim().is_empty()).collect();
     if gpus_raw.is_empty() {
         log::info!("No GPUs found!");
         return vec![];
@@ -117,7 +146,6 @@ fn get_gpu_info_windows(lib_path: &str) -> Vec<HashMap<String, String>> {
     let keys: Vec<String> = gpus_raw[0]
         .trim()
         .to_lowercase()
-        .replace("node", "node")
         .replace("adaptercompatibility", "vendor")
         .replace("name", "model")
         .split(',')
@@ -129,11 +157,29 @@ fn get_gpu_info_windows(lib_path: &str) -> Vec<HashMap<String, String>> {
     let mut gpu_info = Vec::new();
     let key_len = keys.len();
     for chunk in values.chunks(key_len) {
-        let mut map = std::collections::HashMap::new();
+        let mut map = HashMap::new();
         for (key, value) in keys.iter().zip(chunk) {
             map.insert(key.to_string(), value.to_string());
         }
         gpu_info.push(map);
     }
     gpu_info
+}
+
+/// OS-agnostic function to get GPU name.
+///
+/// # Returns
+///
+/// A `Vec` of `HashMap` containing GPU(s) information if successful, otherwise an empty `Vec`.
+pub fn get_gpu_info() -> Vec<HashMap<String, String>> {
+    let operating_system = std::env::consts::OS;
+    match operating_system {
+        "macos" => get_gpu_info_darwin("/usr/sbin/system_profiler"),
+        "linux" => get_gpu_info_linux("/usr/bin/lspci"),
+        "windows" => get_gpu_info_windows("C:\\Windows\\System32\\wbem\\wmic.exe"),
+        _ => {
+            log::error!("Unsupported operating system: {}", operating_system);
+            Vec::new()
+        }
+    }
 }

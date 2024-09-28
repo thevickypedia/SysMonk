@@ -41,7 +41,7 @@ pub fn get_disks(disks: &Disks) -> Vec<HashMap<String, String>> {
 
 fn get_gpu_info() -> Vec<String> {
     let gpu_info = legacy::gpu::get_gpu_info();
-    log::info!("GPUs: {:?}", gpu_info);
+    log::debug!("GPUs: {:?}", gpu_info);
     let mut gpus: Vec<String> = vec![];
     for gpu in gpu_info {
         if let Some(gpu_model) = gpu.get("model") {

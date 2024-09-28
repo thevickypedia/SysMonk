@@ -121,10 +121,16 @@ fn darwin_disks(lib_path: &str) -> Vec<HashMap<String, String>> {
         }
     };
     let disks: Vec<&str> = output.lines().collect();
-    let disk_lines: Vec<&str> = disks.into_iter().filter(|&line| line.starts_with("/dev/disk")).collect();
+    let disk_lines: Vec<&str> = disks
+        .into_iter()
+        .filter(|&line| line.starts_with("/dev/disk"))
+        .collect();
     let mut disk_info = Vec::new();
     for line in disk_lines {
-        let device_id = line.split_whitespace().next().unwrap();
+        let device_id = line
+            .split_whitespace()
+            .next()
+            .unwrap_or_default();
         if !is_physical_disk(lib_path, device_id) {
             continue;
         }
@@ -136,18 +142,41 @@ fn darwin_disks(lib_path: &str) -> Vec<HashMap<String, String>> {
                 return Vec::new();
             }
         };
-        let info_lines: Vec<&str> = disk_info_output.lines().collect();
+        let info_lines: Vec<&str> = disk_info_output
+            .lines()
+            .collect();
         let mut disk_data = HashMap::new();
         for info_line in info_lines {
             if info_line.contains("Device / Media Name:") {
-                disk_data.insert("Name".to_string(), info_line.split(":").nth(1).unwrap().trim().to_string());
+                disk_data.insert(
+                    "Name".to_string(),
+                    info_line
+                        .split(":")
+                        .nth(1)
+                        .unwrap_or_default()
+                        .trim().to_string()
+                );
             }
             if info_line.contains("Disk Size:") {
-                let size_info = info_line.split(":").nth(1).unwrap().split("(").next().unwrap().trim().to_string();
-                disk_data.insert("Size".to_string(), size_info);
+                let size_info = info_line
+                    .split(":")
+                    .nth(1)
+                    .unwrap_or_default()
+                    .split("(")
+                    .next()
+                    .unwrap_or_default()
+                    .trim()
+                    .to_string();
+                disk_data.insert(
+                    "Size".to_string(),
+                    size_info
+                );
             }
         }
-        disk_data.insert("DeviceID".to_string(), device_id.to_string());
+        disk_data.insert(
+            "DeviceID".to_string(),
+            device_id.to_string()
+        );
         disk_info.push(disk_data);
     }
     disk_info
@@ -168,7 +197,14 @@ fn reformat_windows(data: &mut HashMap<String, Value>) -> HashMap<String, String
     let mut reformatted_data = HashMap::new();
     reformatted_data.insert("Size".to_string(), squire::util::size_converter(size as u64));
     reformatted_data.insert("Name".to_string(), model);
-    reformatted_data.insert("DeviceID".to_string(), data.get("DeviceID").unwrap().as_str().unwrap().to_string());
+    reformatted_data.insert(
+        "DeviceID".to_string(),
+        data.get("DeviceID")
+            .unwrap()
+            .as_str()
+            .unwrap()
+            .to_string()
+    );
     reformatted_data
 }
 
